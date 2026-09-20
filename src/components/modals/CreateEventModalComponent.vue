@@ -1,136 +1,132 @@
 <template>
   <!-- modal -->
-  <form @submit.prevent="createEvent">
-    <div class="modal fade" id="create-event-modal" ref="createEventModal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
-        <div class="modal-content shadow">
-          <div class="modal-header">
-            <div class="d-flex align-items-center w-100">
-              <strong class="text-nowrap overflow-hidden me-4" style="text-overflow: ellipsis">
-                New Event
-              </strong>
-            </div>
+  <div class="modal fade" id="create-event-modal" ref="createEventModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+      <div class="modal-content shadow">
+        <div class="modal-header">
+          <div class="d-flex align-items-center w-100">
+            <strong class="text-nowrap overflow-hidden me-4" style="text-overflow: ellipsis">
+              New Event
+            </strong>
           </div>
-          <!-- help description -->
-          <div class="modal-body">
-            <transition enter-active-class="animate__animated animate__fadeIn animate__faster">
-              <!-- error message -->
-              <div v-if="error.length > 0" class="mb-2 p-2 small rounded bg-danger-subtle text-danger-emphasis">
-                {{ error }}
-              </div>
-            </transition>
-            <p class="small text-muted">
-              Create a scheduled event by filling in the details below.
-            </p>
-            <!-- event creation fields -->
-            <!-- title text -->
-            <div class="w-100">
-              <input required type="text" class="form-control form-control-sm mb-2" placeholder="Event Title"
-                id="event-create-title" v-model="newEvent.title" />
+        </div>
+        <!-- help description -->
+        <div class="modal-body">
+          <transition enter-active-class="animate__animated animate__fadeIn animate__faster">
+            <!-- error message -->
+            <div v-if="error.length > 0" class="mb-2 p-2 small rounded bg-danger-subtle text-danger-emphasis">
+              {{ error }}
             </div>
+          </transition>
+          <p class="small text-muted">
+            Create a scheduled event by filling in the details below.
+          </p>
+          <!-- event creation fields -->
+          <!-- title text -->
+          <div class="w-100">
+            <input type="text" class="form-control form-control-sm mb-2" placeholder="Event Title"
+              id="event-create-title" v-model="newEvent.title" />
+          </div>
 
-            <!-- type + subtype dropdown-->
-            <div class="mb-2 d-flex flex-row gap-2 w-100">
-              <select required id="event-create-type" class="form-select form-select-sm text-capitalize"
-                v-model="newEvent.type">
-                <option value="">Select Type</option>
-                <option class="text-capitalize" v-for="t in types" :key="t" :value="t">
-                  {{ t }}
-                </option>
-              </select>
-
-              <select required id="event-create-subtype" :disabled="this.newEvent.type.length === 0"
-                class="form-select form-select-sm text-capitalize" v-model="newEvent.subtype">
-                <option value="">Select Subtype</option>
-                <option class="text-capitalize" v-for="st in subtypes" :key="st" :value="st">
-                  {{ st }}
-                </option>
-              </select>
-            </div>
-            <label for="event-create-employee" class="small">Employee events can be tied to a specific employee</label>
-            <!-- employee selection if type is employee -->
-            <div class="mb-2">
-              <select :disabled="newEvent.type !== 'employee'" id="event-create-employee"
-                class="form-select form-select-sm" v-model="newEvent.employee_num">
-                <option :value="null">Select Employee</option>
-                <option v-for="employee in employees.sort((a, b) => a.name.localeCompare(b.name))"
-                  :key="employee.number" :value="employee.number">
-                  {{ employee.name }}
-                </option>
-              </select>
-            </div>
-
-            <!-- description text -->
-            <div class="mb-2">
-              <textarea id="event-create-description" class="form-control form-control-sm"
-                style="min-height: 100px; resize: none;" v-model="newEvent.description"
-                placeholder="What is this event about? (optional)"></textarea>
-            </div>
-            <!-- help description -->
-            <p class="small text-muted lh-sm mb-0">
-              The start and end date/time of the event will determine how long the content will be visible.
-            </p>
-            <!-- date range -->
-            <div class="mb-2 d-flex flex-row gap-2 w-100">
-              <div class="col">
-                <label for="event-create-start-date" class="small">Start</label>
-                <input required type="datetime-local" step="1" class="text-uppercase form-control form-control-sm"
-                  id="event-create-start-date" v-model="newEvent.start" />
-              </div>
-              <div class="col">
-                <label for="event-create-end-date" class="small">End</label>
-                <input required type="datetime-local" step="1" :disabled="newEvent.allDay"
-                  class="text-uppercase form-control form-control-sm" id="event-create-end-date"
-                  v-model="newEvent.end" />
-              </div>
-            </div>
-
-            <!-- locations dropdown -->
-            <select id="event-create-location" :disabled="newEvent.companyWide" :required="!newEvent.companyWide"
-              class="form-select form-select-sm mb-2" v-model="newEvent.location_id">
-              <option :value="null">Select Location</option>
-              <option v-for="location in locations" :key="location.name + '-' + location.id" :value="location.id">
-                {{ location.name }}
+          <!-- type + subtype dropdown-->
+          <div class="mb-2 d-flex flex-row gap-2 w-100">
+            <select id="event-create-type" class="form-select form-select-sm text-capitalize" v-model="newEvent.type">
+              <option value="">Select Type</option>
+              <option class="text-capitalize" v-for="t in types" :key="t" :value="t">
+                {{ t }}
               </option>
             </select>
 
-            <!-- event flags -->
-            <span class="hstack gap-2 align-items-center mb-1" :disabled="newEvent.companyWide">
-              <label for="event-create-all-day" class="small text-nowrap">One-day Event</label>
-              <input type="checkbox" class="form-check-input my-0" id="event-create-all-day" v-model="newEvent.allDay">
-              <label for="event-create-company-wide" class="small text-nowrap">All Locations</label>
-              <input type="checkbox" class="form-check-input my-0" id="event-create-company-wide"
-                v-model="newEvent.companyWide">
-            </span>
+            <select id="event-create-subtype" :disabled="this.newEvent.type.length === 0"
+              class="form-select form-select-sm text-capitalize" v-model="newEvent.subtype">
+              <option value="">Select Subtype</option>
+              <option class="text-capitalize" v-for="st in subtypes" :key="st" :value="st">
+                {{ st }}
+              </option>
+            </select>
+          </div>
+          <label for="event-create-employee" class="small">Employee events can be tied to a specific employee</label>
+          <!-- employee selection if type is employee -->
+          <div class="mb-2">
+            <select :disabled="newEvent.type !== 'employee'" id="event-create-employee"
+              class="form-select form-select-sm" v-model="newEvent.employee_num">
+              <option :value="null">Select Employee</option>
+              <option v-for="employee in employees.sort((a, b) => a.name.localeCompare(b.name))" :key="employee.number"
+                :value="employee.number">
+                {{ employee.name }}
+              </option>
+            </select>
+          </div>
 
-            <!-- file upload -->
-            <div>
-              <label for="event-create-file" class="small">Upload File</label>
-              <input type="file" accept=".jpg,.jpeg,.png,.pdf,.mp4" class="form-control form-control-sm"
-                id="event-create-file" />
+          <!-- description text -->
+          <div class="mb-2">
+            <textarea id="event-create-description" class="form-control form-control-sm"
+              style="min-height: 100px; resize: none;" v-model="newEvent.description"
+              placeholder="What is this event about? (optional)"></textarea>
+          </div>
+          <!-- help description -->
+          <p class="small text-muted lh-sm mb-0">
+            The start and end date/time of the event will determine how long the content will be visible.
+          </p>
+          <!-- date range -->
+          <div class="mb-2 d-flex flex-row gap-2 w-100">
+            <div class="col">
+              <label for="event-create-start-date" class="small">Start</label>
+              <input type="datetime-local" step="1" class="text-uppercase form-control form-control-sm"
+                id="event-create-start-date" v-model="newEvent.start" />
+            </div>
+            <div class="col">
+              <label for="event-create-end-date" class="small">End</label>
+              <input type="datetime-local" step="1" :disabled="newEvent.allDay"
+                class="text-uppercase form-control form-control-sm" id="event-create-end-date" v-model="newEvent.end" />
             </div>
           </div>
 
-          <div class="modal-footer p-2">
-            <button type="reset" class="btn btn-sm btn-danger me-2" data-bs-dismiss="modal" @click="clearChanges"
-              title="Cancel">
-              Cancel
-            </button>
+          <!-- locations dropdown -->
+          <select id="event-create-location" :disabled="newEvent.companyWide" class="form-select form-select-sm mb-2"
+            v-model="newEvent.location_id">
+            <option :value="null">Select Location</option>
+            <option v-for="location in locations" :key="location.name + '-' + location.id" :value="location.id">
+              {{ location.name }}
+            </option>
+          </select>
 
-            <button type="submit" class="btn btn-sm btn-success" title="Create Event">
-              + Create
-            </button>
+          <!-- event flags -->
+          <span class="hstack gap-2 align-items-center mb-1" :disabled="newEvent.companyWide">
+            <label for="event-create-all-day" class="small text-nowrap">One-day Event</label>
+            <input type="checkbox" class="form-check-input my-0" id="event-create-all-day" v-model="newEvent.allDay">
+            <label for="event-create-company-wide" class="small text-nowrap">All Locations</label>
+            <input type="checkbox" class="form-check-input my-0" id="event-create-company-wide"
+              v-model="newEvent.companyWide">
+          </span>
+
+          <!-- file upload -->
+          <div>
+            <label for="event-create-file" class="small">Upload File</label>
+            <input type="file" accept=".jpg,.jpeg,.png,.pdf,.mp4" class="form-control form-control-sm"
+              id="event-create-file" />
           </div>
+        </div>
+
+        <div class="modal-footer p-2">
+          <button type="reset" class="btn btn-sm btn-danger me-2" data-bs-dismiss="modal" @click="clearChanges"
+            title="Cancel">
+            Cancel
+          </button>
+
+          <button type="button" :disabled="!canSave" :class="{ disabled: !canSave}" @click="createEvent" class="btn btn-sm btn-success"
+            title="Create Event">
+            + Create
+          </button>
         </div>
       </div>
     </div>
-  </form>
+  </div>
 </template>
 
 <script>
 import { eventTypes } from "@/common/constants";
 import { clearModalFocus } from "@/common/helpers";
-import { Modal } from "bootstrap";
 
 export default {
   components: {
@@ -168,7 +164,6 @@ export default {
       if (this.$route.name === "Dashboard") this.newEvent.type = "announcement";
 
       this.$refs.createEventModal.addEventListener("hidden.bs.modal", () => {
-        this.editing = false;
       });
 
       clearModalFocus(this.$refs.createEventModal);
@@ -190,9 +185,17 @@ export default {
       return eventTypes[this.newEvent.type] ?? [];
     },
     canSave() {
-      return Boolean(
-        this.newEvent.title && this.newEvent.type && this.newEvent.subtype && this.newEvent.start
-      );
+      const requiredFieldsFilled =
+        this.newEvent.title.trim() &&
+        this.newEvent.type &&
+        this.newEvent.subtype &&
+        this.newEvent.start;
+
+      const employeeValid =
+        this.newEvent.type !== "employee" ||
+        this.newEvent.employee_num !== null;
+
+      return Boolean(requiredFieldsFilled && employeeValid);
     },
   },
 
@@ -214,10 +217,6 @@ export default {
     },
     async createEvent() {
       try {
-        // is it employee-specific?
-        if (this.newEvent.type === "employee" && this.newEvent.employee_num === null) {
-          this.error = "Please select an employee."; return;
-        }
         // is it one-day (allDay)?
         if (this.newEvent.allDay) {
           this.newEvent.start = this.newEvent.start.split('T')[0] + 'T00:00:00';
@@ -243,7 +242,7 @@ export default {
           entity_json: JSON.stringify(this.newEvent)
         })
         this.clearChanges();
-        Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
+        this.$modal.hide("create-event-modal");
         this.$emit("created")
         this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
         // update the null entity_id value in the new activity log
@@ -291,10 +290,14 @@ export default {
         this.error = "Start date must be before end date.";
         return;
       }
-      // user picked start date and end date on the same day
+      // user picked the same date and time for start and end
       if (start.getTime() === end.getTime()) {
         this.error = "Start date and end date must be different.";
         return;
+      }
+      // user picked dates on the same day but with different times → timed event, not all-day
+      if (start.toDateString() === end.toDateString()) {
+        this.newEvent.allDay = false;
       }
 
       this.error = "";
@@ -334,9 +337,13 @@ export default {
         const diffMs = end.getTime() - start.getTime();
         const oneDayMs = 24 * 60 * 60 * 1000;
 
-        // if the range is longer than one day, update both dates.
-        // Otherwise, only update the start date.
+        // update the dates based on the picked range:
+        // multi-day > both dates; same-day with different times > timed event
+        // (both dates, allDay stays false); otherwise single day > all-day.
         if (diffMs > oneDayMs) {
+          this.newEvent.start = this.formatDateTimeLocal(newValue.start);
+          this.newEvent.end = this.formatDateTimeLocal(newValue.end);
+        } else if (start.toDateString() === end.toDateString() && start.getTime() !== end.getTime()) {
           this.newEvent.start = this.formatDateTimeLocal(newValue.start);
           this.newEvent.end = this.formatDateTimeLocal(newValue.end);
         } else {
