@@ -82,9 +82,7 @@
               Upcoming Announcements
             </h6>
             <router-link :to="{ name: 'Calendar', query: { type: 'announcement' } }"
-              class="small link-primary text-decoration-none">Manage
-              Announcements
-              &nbsp;▸</router-link>
+              class="small link-primary text-decoration-none">More&nbsp;▸</router-link>
           </div>
           <ul v-if="upcomingAnnouncements.length" class="list-group list-group-flush">
             <li v-for="(a, i) in upcomingAnnouncements" :key="i" class="list-group-item small d-flex align-items-center gap-3"
@@ -120,7 +118,7 @@
               Recent Uploads
             </h6>
             <router-link :to="{ name: 'Screens', query: { tab: 'content' } }"
-              class="small link-primary text-decoration-none">View Library
+              class="small link-primary text-decoration-none">More
               &nbsp;▸</router-link>
           </div>
           <div class="card-body" v-if="recentUploads.length">
@@ -160,7 +158,7 @@
               </span>
               People
             </h6>
-            <router-link to="/calendar" class="small link-primary text-decoration-none">View Calendar
+            <router-link to="/calendar" class="small link-primary text-decoration-none">More
               &nbsp;▸</router-link>
           </div>
           <ul v-if="employeeEvents.length" class="list-group list-group-flush"
@@ -244,11 +242,9 @@ import Calendar from "vue-material-design-icons/Calendar.vue";
 import ExclamationThick from "vue-material-design-icons/ExclamationThick.vue";
 
 import CreateEventModalComponent from "@/components/modals/CreateEventModalComponent.vue";
-import LoadingComponent from "@/components/LoadingComponent.vue";
 
 import { markRaw } from "vue";
 import { formatTimeAgo } from "@/common/helpers";
-import { Modal } from "bootstrap";
 
 export default {
   name: "DashboardView",
@@ -270,7 +266,6 @@ export default {
     ExclamationThick,
 
     CreateEventModalComponent,
-    LoadingComponent,
   },
 
   data() {
@@ -290,9 +285,7 @@ export default {
   },
   methods: {
     openCreateModal() {
-      Modal.getOrCreateInstance(
-        document.getElementById("create-event-modal")
-      ).show();
+      this.$modal.show('create-event-modal');
     },
     formatTimeAgo,
     setValue() {
