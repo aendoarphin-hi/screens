@@ -17,6 +17,7 @@ import HelpModalComponent from "@/components/modals/HelpModalComponent.vue";
 // app utilities
 import { debounce } from "@/common/helpers.js";
 import { config } from "@/common/config.js";
+import { Modal } from "bootstrap";
 
 // fix for vue resize observer error
 debounce();
@@ -29,6 +30,10 @@ app.config.globalProperties = {
   $env: process.env.NODE_ENV,
   $api: config.api,
   $axios: axios,
+  $modal: {
+    show: (id) => Modal.getOrCreateInstance(document.getElementById(id)).show(),
+    hide: (id) => Modal.getOrCreateInstance(document.getElementById(id)).hide(),
+  }
 }
 
 console.log("Hayden " + config.appName + " v" + config.appVersion);
