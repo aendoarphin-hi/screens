@@ -134,7 +134,6 @@ import Pencil from "vue-material-design-icons/Pencil.vue";
 import Floppy from "vue-material-design-icons/Floppy.vue";
 import CalendarRangeOutline from "vue-material-design-icons/CalendarRangeOutline.vue";
 import MapMarker from "vue-material-design-icons/MapMarker.vue";
-import { Modal } from "bootstrap";
 import { clearModalFocus, formatDate, formatDateTimeLocal } from "@/common/helpers";
 import { eventTypes } from "@/common/constants";
 
@@ -297,7 +296,7 @@ export default {
         })
 
         this.$emit("edited");
-        Modal.getOrCreateInstance(document.getElementById('edit-event-modal')).hide();
+        this.$modal.hide('edit-event-modal');
         this.toast.show("Event Updated", "The event has been successfully updated.", "bg-info-subtle text-info-emphasis");
       } catch (error) {
         console.error("Error saving changes:", error);
@@ -322,7 +321,7 @@ export default {
         });
         this.resetChanges();
         this.$emit("deleted")
-        Modal.getOrCreateInstance(document.getElementById('edit-event-modal')).hide();
+        this.$modal.hide('edit-event-modal');
         this.toast.show("Event Deleted", "The event has been successfully deleted.", "bg-info-subtle text-info-emphasis");
         // log activity
         console.log(toDelete);
