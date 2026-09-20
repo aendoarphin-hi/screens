@@ -63,7 +63,6 @@
 
 <script>
 import { clearModalFocus } from '@/common/helpers';
-import { Modal } from 'bootstrap';
 
 export default {
   inject: ['toast'],
@@ -97,7 +96,7 @@ export default {
         if (res.data.success === false && res.data.code === 200) {
           this.error = res.data.message
         } else {
-          Modal.getOrCreateInstance(document.getElementById('add-device-modal')).hide();
+          this.$modal.hide('add-device-modal');
           this.toast.show("Screen Added", "The screen has been added.", "bg-success-subtle text-success-emphasis");
           this.clearChanges();
           this.$emit('added');
