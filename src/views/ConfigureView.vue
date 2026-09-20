@@ -83,7 +83,6 @@
 
 <script>
 import AddDeviceModalComponent from '@/components/modals/AddDeviceModalComponent.vue';
-import { Modal } from 'bootstrap';
 import { nextTick } from 'vue';
 import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
 
@@ -154,9 +153,7 @@ export default {
       nextTick(() => {
         this.$refs.addDeviceModal.setDevice(device);
 
-        Modal.getOrCreateInstance(
-          document.getElementById('add-device-modal')
-        ).show();
+        this.$modal.show('add-device-modal');
       });
     },
   }
