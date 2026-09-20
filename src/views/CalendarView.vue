@@ -85,7 +85,7 @@
 <script>
 import FullCalendar from '@fullcalendar/vue3'
 
-import themePlugin from '@fullcalendar/vue3/themes/forma'
+import themePlugin from '@fullcalendar/vue3/themes/breezy'
 import dayGridPlugin from '@fullcalendar/vue3/daygrid'
 import timeGridPlugin from '@fullcalendar/vue3/timegrid'
 import listPlugin from '@fullcalendar/vue3/list'
@@ -93,12 +93,11 @@ import interactionPlugin from '@fullcalendar/vue3/interaction'
 
 // Styles
 import '@fullcalendar/vue3/skeleton.css'
-import '@fullcalendar/vue3/themes/forma/theme.css'
-import '@fullcalendar/vue3/themes/forma/palettes/blue.css'
+import '@fullcalendar/vue3/themes/breezy/theme.css'
+import '@/assets/styles/hayden.css'
 import EditEventModalComponent from '@/components/modals/EditEventModalComponent.vue'
 import CreateEventModalComponent from '@/components/modals/CreateEventModalComponent.vue'
 import { nextTick } from 'vue'
-import { Modal } from 'bootstrap'
 import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
 import Filter from "vue-material-design-icons/Filter.vue"
 import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue"
@@ -210,9 +209,7 @@ export default {
           }
           this.initDate = info.event.start
           nextTick(() => {
-            Modal.getOrCreateInstance(
-              document.getElementById('edit-event-modal')
-            ).show()
+            this.$modal.show('edit-event-modal')
           })
           console.log('Raw event: ' + JSON.stringify(this.selectedEvent, null, 2))
         }
@@ -233,9 +230,7 @@ export default {
     },
     openCreateEvent() {
       nextTick(() => {
-        Modal.getOrCreateInstance(
-          document.getElementById('create-event-modal')
-        ).show()
+        this.$modal.show('create-event-modal')
       })
     },
     isCompanyWide(locationId) {
