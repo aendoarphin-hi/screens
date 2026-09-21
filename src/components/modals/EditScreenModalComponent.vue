@@ -36,6 +36,13 @@
               <small class="text-muted text-center" style="font-size: 10px">
                 IP: {{ form.ip_address }}&nbsp;&nbsp;MAC: {{ form.mac_address }}
               </small>
+              <div class="bg-success-subtle rounded p-2">
+                <p class="form-text text-body-secondary animate__animated animate__fadeIn">
+                  <InformationOutline /> When a playlist is selected, the play sequence will prefill with the playlist's
+                  assigned content.
+                  Modify its content and play sequence via edit mode in the <strong>Playlists</strong> tab.
+                </p>
+              </div>
             </div>
           </div>
           <!-- screen content management -->
@@ -44,7 +51,7 @@
             <!-- play sequence list -->
             <div class="content-queue small" @dragover.prevent="onContainerDragOver" @drop.prevent="onContainerDrop">
               <div v-for="(item, i) in queueItems" :key="item.id" class="queue-item"
-                :class="{ dragging: draggedId === item.id, 'drag-over': dragOverId === item.id && draggedId !== item.id }"
+                :class="{ 'opacity-50': form.playlist_id, dragging: draggedId === item.id, 'drag-over': dragOverId === item.id && draggedId !== item.id }"
                 draggable="true" @dragstart="onDragStart(item, $event)" @dragover.prevent="onDragOver(item)"
                 @dragleave="onDragLeave(item)" @drop.prevent="onDrop(item)" @dragend="onDragEnd">
                 <span class="drag-handle" title="Drag to reorder">
@@ -55,7 +62,7 @@
                   <span class="fw-semibold">{{ item.filename }}</span>
                   <small class="text-muted">{{ item.title }}</small>
                 </div>
-                <button type="button" class="btn btn-sm border-0 p-0 shadow-none"
+                <button type="button" class="btn btn-sm border-0 p-0 shadow-none" :disabled="form.playlist_id !== null"
                   title="Remove from play sequence" @click="removeFromQueue(item.id)">
                   <Close class="text-danger" />
                 </button>
@@ -64,7 +71,8 @@
               <!-- empty state -->
               <div v-if="queueItems.length === 0" class="empty-state">
                 No content in the play sequence yet.<br />
-                Use the plus button in the <em>Existing Content</em> list to add items here.
+                Use the plus button in the <em>Existing Content</em> list to add items here
+                OR select a playlist to prefill the play sequence.
               </div>
             </div>
           </div>
@@ -99,7 +107,7 @@
             Delete
           </button>
 
-          <button type="button" class="btn btn-sm btn-danger me-2" data-bs-dismiss="modal" title="Cancel">
+          <button type="button" class="btn btn-sm btn-danger me-2" @click="clearChanges" title="Cancel">
             Cancel
           </button>
 
@@ -117,13 +125,15 @@
 import { clearModalFocus } from '@/common/helpers';
 import Close from "vue-material-design-icons/Close.vue";
 import DragVertical from "vue-material-design-icons/DragVertical.vue";
+import InformationOutline from "vue-material-design-icons/InformationOutline.vue";
 import Plus from "vue-material-design-icons/Plus.vue";
 
 export default {
   components: {
     Close,
     DragVertical,
-    Plus
+    Plus,
+    InformationOutline
   },
   props: {
     screen: Object
@@ -154,6 +164,20 @@ export default {
     }
   },
   methods: {
+    clearChanges() {
+      this.form = {
+        id: null,
+        title: null,
+        location_id: null,
+        status: null,
+        content: null,
+        playlist_id: null,
+        mac_address: null,
+        ip_address: null
+      }
+      this.contentQueue = [];
+      this.$modal.hide('edit-screen-modal');
+    },
     async deleteScreen() {
       try {
         if (!window.confirm('Are you sure you want to delete this screen?')) return;
@@ -210,12 +234,28 @@ export default {
       }
       this.contentQueue = ids;
     },
+    /**
+     * Rebuilds the play sequence from the content of the currently selected
+     * playlist (when a playlist is selected).
+     */
+    seedQueueFromSelectedPlaylist() {
+      if (!this.form.playlist_id) return;
+      const playlist = this.playlists.find(
+        (p) => Number(p.id) === Number(this.form.playlist_id)
+      );
+      if (playlist) {
+        this.seedContentQueue(playlist.content);
+      }
+    },
     addContentToQueue(item) {
       if (!item || item.id === undefined || item.id === null) return;
       const id = Number(item.id);
       if (Number.isNaN(id)) return;
       if (!this.contentQueue.includes(id)) {
         this.contentQueue.push(id);
+        // manually editing the play sequence means it is no longer driven by
+        // a playlist, so clear the selected playlist
+        this.form.playlist_id = null;
       }
     },
     removeFromQueue(id) {
@@ -224,6 +264,7 @@ export default {
       if (Number(this.draggedId) === nid) this.onDragEnd();
     },
     onDragStart(item, event) {
+      if (this.form.playlist_id) return;
       this.draggedId = item.id;
       event.dataTransfer.setData("text/plain", String(item.id));
       event.dataTransfer.effectAllowed = "move";
@@ -279,9 +320,17 @@ export default {
     },
     async submit() {
       try {
-        // persist the ordered play sequence as a comma-separated string of content
-        // ids (index 0 plays first), matching the screens.content db column format
-        this.form.content = this.contentQueue.join(",");
+        if (this.form.playlist_id) {
+          // the screen is driven by the selected playlist, so the play sequence
+          // comes from the playlist (any manually placed content is cleared)
+          this.form.content = null;
+        } else {
+          // no playlist selected: make sure playlist_id is null, and persist the
+          // manual play sequence as a comma-separated string of content ids
+          // (index 0 plays first), or null when no content is assigned
+          this.form.playlist_id = null;
+          this.form.content = this.contentQueue.length > 0 ? this.contentQueue.join(",") : null;
+        }
         if (!window.confirm('Are you sure you want to save these changes?\n\n' + JSON.stringify(this.form, null, 2))) return;
         await this.$axios.post(this.$api + 'screens?update', { ...this.form });
         this.$emit('updated');
@@ -335,19 +384,30 @@ export default {
     this.playlists = (await this.$axios.get(this.$api + 'playlists?all')).data;
     this.locations = (await this.$axios.get(this.$api + 'locations?all')).data;
 
-    // the screen prop watcher can fire before the content list finishes loading,
-    // so re-seed the play sequence now that it is available
+    // the screen prop watcher can fire before the content/playlist lists finish
+    // loading, so re-seed the play sequence now that they are available
     if (this.screen) {
       this.seedContentQueue(this.screen.content);
+      this.seedQueueFromSelectedPlaylist();
     }
   },
   watch: {
     screen: {
       immediate: true,
-      handler() {
+      async handler() {
         if (this.screen) {
           this.setScreen(this.screen);
+          this.playlists = (await this.$axios.get(this.$api + 'playlists?all')).data;
         }
+      }
+    },
+    // a playlist selection rebuilds the play sequence from that playlist's content
+    'form.playlist_id': {
+      handler(playlistId) {
+        if (playlistId !== null && playlistId !== undefined && playlistId !== '') {
+          this.seedQueueFromSelectedPlaylist();
+        }
+        // clearing the playlist selection leaves the current play sequence untouched
       }
     }
   }
@@ -423,8 +483,8 @@ export default {
   line-height: 1.15;
 }
 
-.item-info > span,
-.item-info > small {
+.item-info>span,
+.item-info>small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
