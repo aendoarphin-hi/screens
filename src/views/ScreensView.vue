@@ -147,7 +147,7 @@
               </div>
               <!-- refresh button -->
               <button :disabled="loading" class="btn btn-outline-secondary btn-sm" title="Refresh"
-                @click="() => refreshTabPane('screens')">
+                @click="refreshTabPane('screens')">
                 <Refresh />
               </button>
               <!-- clear filter button -->
@@ -193,7 +193,7 @@
                         <button class="btn btn-sm btn-outline-secondary cursor-pointer">
                           <OpenInNew /> Preview
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary cursor-pointer">
+                        <button @click="openEditScreenModal(s)" class="btn btn-sm btn-outline-secondary cursor-pointer">
                           <Pencil /> Edit
                         </button>
                       </div>
@@ -205,6 +205,8 @@
                 <span class="text-muted">No screens found.</span>
               </div>
             </div>
+
+            <!-- grid view -->
             <div v-else-if="viewMode === 'grid'"
               class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
               style="max-height: 70dvh">
@@ -223,8 +225,12 @@
                   <span v-if="s.location" class="text-muted">
                     <MapMarker /> {{ s.location }}
                   </span>
-                  <span @click="openEditScreenModal(s)" class="cursor-pointer mt-auto btn btn-sm btn-primary"
-                    :class="{ 'opacity-0': hoverIndex !== i }">Edit</span>
+                  <div class="d-flex flex-row gap-2" :class="{ 'opacity-0': hoverIndex !== i }">
+                    <span style="font-size: 10px;" @click="openScreenPreview(s)" class="w-50 text-nowrap cursor-pointer btn btn-sm btn-secondary">
+                      Preview
+                    </span><span style="font-size: 10px;" @click="openEditScreenModal(s)"
+                      class="w-50 cursor-pointer mt-auto btn btn-sm btn-primary">Edit</span>
+                  </div>
                 </div>
               </div>
               <div v-if="screens.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
@@ -247,9 +253,9 @@
                 <select id="status-sort-playlists" class="form-select form-select-sm text-capitalize"
                   :value="sortColumns.playlists" @change="sortList($event.target.value)" style="width: 160px">
 
-                  <option v-for="sc in sortableColumns.screens" :key="sc" :value="sc">{{ sc }} - Asc
+                  <option v-for="sc in sortableColumns.playlists" :key="sc" :value="sc">{{ sc }} - Asc
                   </option>
-                  <option v-for="sc in sortableColumns.screens" :key="sc" :value="sc">{{ sc }} - Desc
+                  <option v-for="sc in sortableColumns.playlists" :key="sc" :value="sc">{{ sc }} - Desc
                   </option>
                 </select>
               </div>
@@ -302,7 +308,8 @@
                     <td>{{ p.description }}</td>
                     <td class="text-end">
                       <div class="d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
-                        <button class="btn btn-sm btn-outline-secondary cursor-pointer">
+                        <button @click="openEditPlaylistModal(p)"
+                          class="btn btn-sm btn-outline-secondary cursor-pointer">
                           <Pencil /> Edit
                         </button>
                       </div>
@@ -322,17 +329,17 @@
               <div v-for="(p, i) in playlists" :key="p.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
                 class="card card-font-sm shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2">
                 <div class="card-body d-flex flex-column gap-2">
-                  <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
+                  <span class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                     <PlaylistPlay /> {{ p.name }}
-                  </div>
+                  </span>
+                  <span v-if="p.created_by" class="small">
+                    <Account />{{ empName(p.created_by) }}
+                  </span>
                   <span class="text-muted">
                     {{ p.description }}
                   </span>
-                </div>
-                <div class="card-footer d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
-                  <button class="btn btn-sm btn-outline-secondary cursor-pointer">
-                    <Pencil /> Edit
-                  </button>
+                  <span @click="openEditPlaylistModal(p)" class="cursor-pointer mt-auto btn btn-sm btn-primary"
+                    :class="{ 'opacity-0': hoverIndex !== i }">Edit</span>
                 </div>
               </div>
               <div v-if="playlists.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
@@ -495,10 +502,12 @@
         </template>
       </div>
     </div>
-    <UploadContentModalComponent />
-    <EditScreenModalComponent @updated="refreshTabPane(activeTab)" @deleted="refreshTabPane(activeTab)"
+    <UploadContentModalComponent @uploaded="refreshTabPane('content')" />
+    <EditScreenModalComponent @updated="refreshTabPane('screens')" @deleted="refreshTabPane('screens')"
       :screen="screenToEdit" />
-    <AddPlaylistModalComponent />
+    <AddPlaylistModalComponent @created="refreshTabPane('playlists')" />
+    <EditPlaylistModalComponent :employees="employees" @updated="refreshTabPane('playlists')"
+      @deleted="refreshTabPane('playlists')" :playlist="playlistToEdit" />
   </div>
 </template>
 
@@ -524,12 +533,14 @@ import UploadBox from "vue-material-design-icons/UploadBox.vue";
 import Television from "vue-material-design-icons/Television.vue";
 import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue";
 import Cog from "vue-material-design-icons/Cog.vue";
+import Account from "vue-material-design-icons/Account.vue";
 
 import { filterByField, inSystemGroup, searchByText, sortByField } from "@/common/helpers";
 import UploadContentModalComponent from "@/components/modals/UploadContentModalComponent.vue";
 import { nextTick } from "vue";
 import EditScreenModalComponent from "@/components/modals/EditScreenModalComponent.vue";
 import AddPlaylistModalComponent from "@/components/modals/AddPlaylistModalComponent.vue";
+import EditPlaylistModalComponent from "@/components/modals/EditPlaylistModalComponent.vue";
 
 export default {
   name: "ScreenView",
@@ -555,10 +566,12 @@ export default {
     Television,
     FilterOffOutline,
     Cog,
+    Account,
 
     UploadContentModalComponent,
     EditScreenModalComponent,
-    AddPlaylistModalComponent
+    AddPlaylistModalComponent,
+    EditPlaylistModalComponent
   },
   inject: ["store"],
   data() {
@@ -568,6 +581,7 @@ export default {
       rawScreens: [],
       rawPlaylists: [],
       rawContent: [],
+      employees: [],
       locations: [],
       dataReady: false,
       search: "",
@@ -600,6 +614,7 @@ export default {
       viewMode: "grid", // grid or list
       activeTab: "screens", // active tab
       screenToEdit: null, // obj to pass to modal for editing
+      playlistToEdit: null, // obj to pass to modal for editing
     };
   },
   computed: {
@@ -643,11 +658,30 @@ export default {
     },
   },
   methods: {
+    openScreenPreview(s) {
+      const route = this.$router.resolve({
+        name: "Slideshow",
+        query: {
+          screenid: s.id,
+        },
+      });
+
+      window.open(route.href, "_blank");
+    },
+    empName(number) {
+      return this.employees.find((e) => e.number === number)?.name;
+    },
     openEditScreenModal(s) {
       // window.alert(JSON.stringify(s, null, 2));
       this.screenToEdit = { ...s };
       nextTick(() => {
         this.$modal.show("edit-screen-modal");
+      })
+    },
+    openEditPlaylistModal(p) {
+      this.playlistToEdit = { ...p };
+      nextTick(() => {
+        this.$modal.show("edit-playlist-modal");
       })
     },
     openNewPlaylistModal() {
@@ -777,6 +811,8 @@ export default {
         this.activeTab = tab;
       }
 
+      // get all employees
+      this.employees = (await this.$axios.get(this.$api + "employees?all")).data;
       // get all locations
       this.locations = (await this.$axios.get(this.$api + "locations?all")).data;
 
