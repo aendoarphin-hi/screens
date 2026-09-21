@@ -3,7 +3,7 @@ const { defineConfig } = require('@vue/cli-service')
 
 module.exports = defineConfig({
   transpileDependencies: true,
-
+  publicPath: '/ttprod/v3/hrcomms/app/',
   devServer: {
     port: 8080,
     proxy: {
