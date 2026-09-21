@@ -1,18 +1,11 @@
 <template>
-  <!-- wrapper for bootstrap-vue components-->
-  <!-- dev tools -->
-  <div @click="border = !border" id="border-button" class="btn-sm btn-outline-primary cursor-pointer"
-    style="z-index: 1000; position: fixed; bottom: 0; right: 200px; opacity: 0.5">
-    {{ border ? "Disable" : "Enable" }} Borders
-  </div>
-  <div v-if="this.$env === 'development'"
-    style="z-index: 1000; position: fixed; bottom: 0; right: 0; background-color: yellow; opacity: 0.5">
-    Development Environment
-  </div>
   <!-- main content -->
   <div class="d-flex flex-row bg-light" style="height: 100vh; overflow: auto;" :class="border ? 'borderized' : ''">
-    <SidebarComponent />
-    <router-view id="router-view" class="container" v-slot="{ Component }">
+    <SidebarComponent v-if="$route.name !== 'Slideshow'" />
+    <router-view v-if="$route.name === 'Slideshow'" id="router-view" class="container">
+      <SlideshowComponent />
+    </router-view>
+    <router-view v-else id="router-view" class="container" v-slot="{ Component }">
       <transition enter-active-class="animate__animated animate__fadeIn animate__faster"
         leave-active-class="animate__animated animate__fadeOut animate__faster" mode="out-in">
         <component :is="Component" :key="$route.path" />
@@ -26,10 +19,12 @@
 import SidebarComponent from "@/components/SidebarComponent.vue";
 import AuthView from "@/views/AuthView.vue";
 import ToastComponent from "@/components/ToastComponent.vue";
+import SlideshowComponent from "@/components/SlideshowComponent.vue";
 import { store } from "@/common/store";
 
 export default {
   components: {
+    SlideshowComponent,
     SidebarComponent,
     AuthView,
     ToastComponent,
@@ -65,11 +60,4 @@ export default {
 </script>
 
 <style>
-.borderized *:nth-child(even) {
-  border: 1px solid rgba(255, 0, 0, 0.348);
-}
-
-.borderized *:nth-child(odd) {
-  border: 1px solid rgba(14, 133, 14, 0.393);
-}
 </style>
