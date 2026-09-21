@@ -100,11 +100,16 @@
               v-model="newEvent.companyWide">
           </span>
 
-          <!-- file upload -->
+          <!-- existing content selection -->
           <div>
-            <label for="event-create-file" class="small">Upload File</label>
-            <input type="file" accept=".jpg,.jpeg,.png,.pdf,.mp4" class="form-control form-control-sm"
-              id="event-create-file" />
+            <label for="event-create-content" class="small">Content</label>
+            <select id="event-create-content" class="form-select form-select-sm" v-model="newEvent.content_id">
+              <option :value="null">No Content</option>
+              <option v-for="c in sortedContent" :key="c.id" :value="parseInt(c.id)">
+                {{ c.filename }}
+              </option>
+            </select>
+            <small class="text-muted d-block">Select existing content to display during this event. (optional)</small>
           </div>
         </div>
 
@@ -155,6 +160,7 @@ export default {
       },
       locations: [],
       employees: [],
+      content: [],
       error: ""
     };
   },
@@ -170,6 +176,7 @@ export default {
 
       this.locations = (await this.$axios.get(this.$api + "locations?all")).data;
       this.employees = (await this.$axios.get(this.$api + "employees?all")).data;
+      this.content = (await this.$axios.get(this.$api + "content?all")).data;
     } catch (error) {
       console.log(error);
     }
@@ -183,6 +190,12 @@ export default {
     },
     subtypes() {
       return eventTypes[this.newEvent.type] ?? [];
+    },
+    sortedContent() {
+      return [...this.content].sort((a, b) => {
+        if (a.filename === b.filename) return 0;
+        return a.filename < b.filename ? -1 : 1
+      })
     },
     canSave() {
       const requiredFieldsFilled =
