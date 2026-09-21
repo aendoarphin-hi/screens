@@ -5,27 +5,51 @@ $hayden-blue-darker: #001f3e;
 
 // Bootstrap variable overrides (must come first)
 $primary: $hayden-blue;
+
 $nav-pills-link-active-bg: $hayden-blue;
 $nav-tabs-border-radius: 6px;
 $nav-tabs-link-active-bg: $hayden-blue;
 $nav-tabs-link-active-color: white;
+
 $nav-link-color: black;
-$link-color: black;
+
+$link-color: $hayden-blue;
+$link-hover-color: $hayden-blue-dark;
+
 $btn-font-weight: 500;
+
 $border-radius: 6px;
-$card-border-width: 0px;
 $border-radius-sm: 6px;
+
+$card-border-width: 0px;
+
 $table-hover-bg: rgba(0, 0, 0, 0.028);
 
 // Import Bootstrap after overrides
 @import "bootstrap/scss/bootstrap";
+
+// Force Hayden colors at the CSS variable level
+:root {
+  --bs-primary: #{$hayden-blue};
+  --bs-primary-rgb: 27, 117, 188;
+
+  --bs-link-color: #{$hayden-blue};
+  --bs-link-color-rgb: 27, 117, 188;
+
+  --bs-link-hover-color: #{$hayden-blue-dark};
+  --bs-link-hover-color-rgb: 0, 52, 102;
+}
 
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--bs-secondary) rgba(0, 0, 0, 0);
 }
 
-.cursor-pointer, select, input, button, a {
+.cursor-pointer,
+select,
+input,
+button,
+a {
   cursor: pointer;
 }
 
@@ -41,12 +65,13 @@ $table-hover-bg: rgba(0, 0, 0, 0.028);
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
   z-index: 200;
 }
-// fullcalendar style overrides
+
+// FullCalendar style overrides
 #Calendar-view > div.card.p-3.mt-3 > div > div.fc-forma-zi1.fc-forma-ku3.fc-forma-Z7Q.fc-forma-IJJ.fc-forma-dl1.fc-forma-1sP.fc-forma-dNl.fc-forma-XpK.fc-forma-N2M.fc-forma-wwb.fc-forma-RJG.fc-forma-tfB.fc-forma-1Wx > div:nth-child(3) > div {
   gap: .5rem !important;
 }
 
-// animate.css infinite flashing for loading
+// Animate.css infinite flashing for loading
 .animate-flash-infinite {
   animation: flash 4s infinite;
 }
