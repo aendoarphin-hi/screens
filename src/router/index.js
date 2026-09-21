@@ -6,14 +6,6 @@ import axios from "axios";
 
 // views
 import DashboardView from "@/views/DashboardView.vue";
-import ScreensView from "@/views/ScreensView.vue";
-import CalendarView from "@/views/CalendarView.vue";
-import Approvals from "@/views/Approvals.vue";
-import ProfileView from "@/views/ProfileView.vue";
-import AuthView from "@/views/AuthView.vue";
-import UnauthorizedView from "@/views/UnauthorizedView.vue";
-import TestView from "@/views/TestView.vue";
-import ConfigureView from "@/views/ConfigureView.vue";
 
 // icons
 import ViewDashboard from "vue-material-design-icons/ViewDashboard.vue";
@@ -55,7 +47,7 @@ const routes = [
   {
     path: "/approvals",
     name: "Approvals",
-    component: () => import("@/views/Approvals.vue"),
+    component: () => import("@/views/ApprovalsView.vue"),
     active: true,
     icon: markRaw(AccountClock),
   },
@@ -88,6 +80,12 @@ const routes = [
     path: "/test",
     name: "Test",
     component: () => import("@/views/TestView.vue"),
+    active: false,
+  },
+  {
+    path: "/slideshow",
+    name: "Slideshow",
+    component: () => import("@/components/SlideshowComponent.vue"),
     active: false,
   },
   {
