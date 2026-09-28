@@ -3,15 +3,18 @@ const { defineConfig } = require('@vue/cli-service')
 
 module.exports = defineConfig({
   transpileDependencies: true,
-  publicPath: '/ttprod/v3/hrcomms/app/',
+
+  publicPath: process.env.NODE_ENV === 'production' ? '/ttprod/v3/hrcomms/' : '/',
+
   devServer: {
     port: 8080,
+
     proxy: {
-      '/hrcomms': {
+      '/api': {
         target: 'http://localhost',
         changeOrigin: true,
         pathRewrite: {
-          '^/hrcomms': '/ttprod/v3/hrcomms/'
+          '^/api': '/ttprod/v3/hrcomms/api'
         }
       }
     }

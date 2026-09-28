@@ -1,5 +1,5 @@
 <template>
-  <div class="modal fade" id="help-modal" tabindex="-1" ref="helpModal">
+  <div class="modal px-3 fade" id="help-modal" tabindex="-1" ref="helpModal">
     <div class="modal-dialog" style="min-width: 800px;">
       <div class="modal-content">
         <div class="modal-header">

@@ -1,5 +1,5 @@
 <template>
-  <div class="modal fade" id="upload-content-modal" ref="uploadContentModal" tabindex="-1">
+  <div class="modal px-3 fade" id="upload-content-modal" ref="uploadContentModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
       <div class="modal-content shadow">
         <div class="modal-header">
@@ -112,9 +112,13 @@ export default {
           formData.append('title', file.name);
           formData.append('type', this.getContentType(file));
           formData.append('uploaded_by', parseInt(this.store.authenticated.number));
+          
+          const needsApproval = Object.values(this.store.authenticated.groups).includes('HR Comms Supervisors');
+          // default to inactive if uploaded by Supervisor, has to go through HR
+          formData.append('status', needsApproval ? 'inactive' : 'active');
 
           try {
-            await this.$axios.post(this.$api + 'content', formData);
+            await this.$axios.post(this.$api + '?content', formData);
             uploaded.push(file);
           } catch (error) {
             console.error(error);

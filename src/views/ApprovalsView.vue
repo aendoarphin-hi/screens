@@ -459,7 +459,7 @@ export default {
       return map[type] || "bg-body-secondary text-muted";
     },
     getTypeIcon(type) {
-      console.log(type);
+      // console.log(type);
       switch (type) {
         case "image":
           return Image;

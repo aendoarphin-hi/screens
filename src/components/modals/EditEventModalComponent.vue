@@ -1,6 +1,6 @@
 <template>
   <!-- modal -->
-  <div class="modal fade" id="edit-event-modal" ref="editEventModal" tabindex="-1">
+  <div class="modal px-3 fade" id="edit-event-modal" ref="editEventModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 500px">
       <div class="modal-content shadow">
         <div class="modal-header">
@@ -11,7 +11,7 @@
             </strong>
             <input v-else type="text" class="form-control form-control-sm" placeholder="Event Title"
               v-model="editEvent.title" />
-              <div v-if="!editing" class="d-flex flex-row gap-2 align-items-center">
+            <div v-if="!editing" class="d-flex flex-row gap-2 align-items-center">
               <div v-if="editEvent.type && editEvent.subtype" class="badge rounded-pill text-capitalize border"
                 style="width: min-content;" :class="badgeClass(editEvent.type)">
                 {{ editEvent.type }} |
@@ -29,7 +29,7 @@
                 </span>
               </small>
             </div>
-              <div v-else class="d-flex flex-row gap-2 align-items-center mt-1">
+            <div v-else class="d-flex flex-row gap-2 align-items-center mt-1">
               <select required class="form-select form-select-sm text-capitalize" v-model="editEvent.type">
                 <option value="">Select Type</option>
                 <option v-for="t in types" :key="t" :value="t">
@@ -65,7 +65,7 @@
               {{ employee.name }}
             </option>
           </select>
-            <div class="mb-2 d-flex flex-row gap-2 w-100">
+          <div class="mb-2 d-flex flex-row gap-2 w-100">
             <!-- date range -->
             <div class="w-100">
               <label for="event-edit-start-date" class="small fw-semibold">Start</label>
@@ -90,6 +90,7 @@
             </option>
           </select>
 
+          <!-- allday and companywide flags -->
           <span v-if="editing" class="hstack gap-2 align-items-center form-control-sm">
             <label for="event-edit-all-day" class="small text-nowrap">One-day Event</label>
             <input type="checkbox" class="form-check-input my-0" id="event-edit-all-day" v-model="editEvent.allDay">
@@ -97,6 +98,20 @@
             <input type="checkbox" class="form-check-input my-0" id="event-edit-company-wide"
               v-model="editEvent.companyWide">
           </span>
+
+          <!-- existing content selection -->
+          <div class="mt-2">
+            <label for="event-edit-content" class="small fw-semibold">Content</label>
+            <select id="event-edit-content" class="form-select form-select-sm" :disabled="!editing"
+              v-model="editEvent.content_id">
+              <option :value="null">No Content</option>
+              <option v-if="orphanContent" :value="parseInt(orphanContent.id)">{{ orphanContent.title }}</option>
+              <option v-for="c in sortedContent" :key="c.id" :value="parseInt(c.id)">
+                {{ c.title }}
+              </option>
+            </select>
+            <small class="text-muted d-block">Select existing content to display during this event. (optional)</small>
+          </div>
         </div>
         <!-- confirmation btns before delete-->
         <div v-if="confirmDelete" class="modal-footer p-2">
@@ -156,6 +171,7 @@ export default {
       editEvent: {}, // draft event to be updated
       employees: [],
       locations: [],
+      content: [],
     };
   },
   computed: {
@@ -172,7 +188,8 @@ export default {
           this.editEvent.end !== this.formatDateTimeLocal(this.event.end) ||
           this.editEvent.allDay !== this.event.allDay ||
           this.editEvent.companyWide !== this.event.companyWide ||
-          this.editEvent.employee_num !== this.event.employee_num)
+          this.editEvent.employee_num !== this.event.employee_num ||
+          Number(this.editEvent.content_id) !== Number(this.event.content_id))
       );
     },
     types() {
@@ -186,6 +203,22 @@ export default {
     },
     employeeName() {
       return this.employees.find(e => e.number === this.editEvent.employee_num)?.name;
+    },
+    sortedContent() {
+      return [...this.content].sort((a, b) => {
+        if (a.filename === b.filename) return 0;
+        return a.filename < b.filename ? -1 : 1
+      }).filter((c) => c.status === 'active');
+    },
+    /**
+     * The content currently linked to this event when it is no longer part of the
+     * active content list (e.g. deactivated/archived) — so view mode still shows it.
+     */
+    orphanContent() {
+      if (this.editEvent.content_id == null) return null;
+      const linked = this.content.find((c) => Number(c.id) === Number(this.editEvent.content_id));
+      if (!linked) return null;
+      return this.sortedContent.some((c) => Number(c.id) === Number(this.editEvent.content_id)) ? null : linked;
     }
   },
   watch: {
@@ -221,8 +254,9 @@ export default {
     clearModalFocus(this.$refs.editEventModal);
 
     // fetch all available locations for the location select dropdown
-    this.locations = (await this.$axios.get(this.$api + 'locations?all')).data;
-    this.employees = (await this.$axios.get(this.$api + 'employees?all')).data;
+    this.locations = (await this.$axios.get(this.$api + '?locations')).data;
+    this.employees = (await this.$axios.get(this.$api + '?employees')).data;
+    this.content = (await this.$axios.get(this.$api + '?content')).data;
   },
 
   methods: {
@@ -276,7 +310,6 @@ export default {
         // If new type changed from employee to non-employee, reset employee_num
         if (this.editEvent.type !== "employee" && this.editEvent.employee_num !== null) {
           this.editEvent.employee_num = null;
-          console.log("Reset employee_num to null");
         }
         // if location_id is null, set companyWide to true
         if (!this.editEvent.location_id) {
@@ -286,9 +319,9 @@ export default {
           ...this.editEvent
         }
         // if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(toEdit, null, 2))) return;
-        await this.$axios.post(this.$api + "events?update", toEdit);
+        await this.$axios.post(this.$api + "?events&update", toEdit);
         // log activity
-        await this.$axios.post(this.$api + "activity?new", {
+        await this.$axios.post(this.$api + "?activity&new", {
           enum: parseInt(this.store.authenticated.number),
           action: "update",
           entity_type: "event",
@@ -314,9 +347,9 @@ export default {
     async deleteEvent() {
       try {
         // capture the event for logging
-        const toDelete = (await this.$axios.get(this.$api + "events?id=" + this.editEvent.id)).data[0];
+        const toDelete = (await this.$axios.get(this.$api + "?events&id=" + this.editEvent.id)).data[0];
         // delete the event
-        await this.$axios.post(this.$api + "events?delete", {
+        await this.$axios.post(this.$api + "?events&delete", {
           id: this.editEvent.id
         });
         this.resetChanges();
@@ -324,8 +357,7 @@ export default {
         this.$modal.hide('edit-event-modal');
         this.toast.show("Event Deleted", "The event has been successfully deleted.", "bg-info-subtle text-info-emphasis");
         // log activity
-        console.log(toDelete);
-        await this.$axios.post(this.$api + "activity?new", {
+        await this.$axios.post(this.$api + "?activity&new", {
           enum: parseInt(this.store.authenticated.number),
           action: "delete",
           entity_type: "event",

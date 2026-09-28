@@ -218,6 +218,7 @@
       </div>
     </div>
     <CreateEventModalComponent />
+    <UploadContentModalComponent />
   </div>
   <div v-else class="d-flex justify-content-center align-items-center">
     <LoadingComponent message="Loading dashboard..." />
@@ -242,6 +243,7 @@ import Calendar from "vue-material-design-icons/Calendar.vue";
 import ExclamationThick from "vue-material-design-icons/ExclamationThick.vue";
 
 import CreateEventModalComponent from "@/components/modals/CreateEventModalComponent.vue";
+import UploadContentModalComponent from "@/components/modals/UploadContentModalComponent.vue";
 
 import { markRaw } from "vue";
 import { formatTimeAgo } from "@/common/helpers";
@@ -266,6 +268,7 @@ export default {
     ExclamationThick,
 
     CreateEventModalComponent,
+    UploadContentModalComponent,
   },
 
   data() {
@@ -286,6 +289,9 @@ export default {
   methods: {
     openCreateModal() {
       this.$modal.show('create-event-modal');
+    },
+    openUploadModal() {
+      this.$modal.show('upload-content-modal');
     },
     formatTimeAgo,
     setValue() {
@@ -416,7 +422,7 @@ export default {
 
       await Promise.all(
         states.map(async d => {
-          this[d] = (await this.$axios.get(this.$api + d + "?all")).data;
+          this[d] = (await this.$axios.get(this.$api + "?" + d)).data;
         })
       );
 

@@ -1,6 +1,6 @@
 <template>
   <!-- modal -->
-  <div class="modal fade" id="edit-playlist-modal" ref="editPlaylistModal" tabindex="-1">
+  <div class="modal px-3 fade" id="edit-playlist-modal" ref="editPlaylistModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 1000px;">
       <div class="modal-content shadow">
 
@@ -44,20 +44,22 @@
               </label>
               <!-- play sequence list -->
               <div class="content-queue small" @dragover.prevent="onContainerDragOver" @drop.prevent="onContainerDrop">
-                <div v-for="(item, i) in queueItems" :key="item.id" class="queue-item"
-                  :class="{ dragging: draggedId === item.id, 'drag-over': dragOverId === item.id && draggedId !== item.id }"
-                  draggable="true" @dragstart="onDragStart(item, $event)" @dragover.prevent="onDragOver(item)"
-                  @dragleave="onDragLeave(item)" @drop.prevent="onDrop(item)" @dragend="onDragEnd">
+                <div v-for="(c, i) in queueItems" :key="c.id" class="queue-item"
+                  :class="{ dragging: draggedId === c.id, 'drag-over': dragOverId === c.id && draggedId !== c.id }"
+                  draggable="true" @dragstart="onDragStart(c, $event)" @dragover.prevent="onDragOver(c)"
+                  @dragleave="onDragLeave(c)" @drop.prevent="onDrop(c)" @dragend="onDragEnd">
                   <span class="drag-handle" title="Drag to reorder">
                     <DragVertical />
                   </span>
                   <span class="sequence-badge" :title="i === 0 ? 'Plays first' : `Position ${i + 1}`">{{ i + 1 }}</span>
                   <div class="item-info">
-                    <span class="fw-semibold">{{ item.filename }}</span>
-                    <small class="text-muted">{{ item.title }}</small>
+                    <span class="fw-semibold">{{ c.title }}</span>
+                    <small v-if="c.uploaded_by" class="text-muted">Uploaded by {{ authorName(c.uploaded_by) }}</small>
                   </div>
-                  <button type="button" class="btn btn-sm border-0 p-0 shadow-none"
-                    title="Remove from play sequence" @click="removeFromQueue(item.id)">
+                  <span v-if="c.isTimed" class="badge text-bg-warning text-nowrap"
+                    title="Timed content — only visible during its event window">Timed</span>
+                  <button type="button" class="btn btn-sm border-0 p-0 shadow-none" title="Remove from play sequence"
+                    @click="removeFromQueue(c.id)">
                     <Close class="text-danger" />
                   </button>
                 </div>
@@ -77,8 +79,8 @@
                 <div v-for="c in sortedContent" :key="c.id" class="content-list-item"
                   :class="{ 'in-queue': contentQueue.includes(parseInt(c.id)) }">
                   <div class="item-info">
-                    <span class="fw-semibold">{{ c.filename }}</span>
-                    <small class="text-muted">{{ c.title }}</small>
+                    <span class="fw-semibold">{{ c.title }}</span>
+                    <small v-if="c.uploaded_by" class="text-muted">Uploaded by {{ authorName(c.uploaded_by) }}</small>
                   </div>
                   <button type="button" class="btn btn-sm border-0 p-0 shadow-none"
                     :disabled="contentQueue.includes(parseInt(c.id))"
@@ -91,6 +93,38 @@
                 <div v-if="sortedContent.length === 0" class="empty-state">
                   No existing content available.
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- timed content: events with attached content -->
+          <div class="mt-2 d-flex flex-column gap-2">
+            <label class="small fw-semibold d-flex align-items-center gap-2">
+              Timed Content
+              <span class="badge rounded-pill text-bg-secondary">{{ timedContent.length }}</span>
+            </label>
+            <small class="text-muted">
+              Events with attached content. When added to the play sequence, the content is only shown
+              during its event's start/end window.
+            </small>
+            <div class="content-list small">
+              <div v-for="e in timedContent" :key="e.id" class="content-list-item"
+                :class="{ 'in-queue': contentQueue.includes(e.content_id) }">
+                <div class="item-info">
+                  <span class="fw-semibold">{{ contentTitle(e.content_id) }}</span>
+                  <small class="text-muted">{{ e.title }} &middot; {{ formatEventRange(e.start, e.end) }}</small>
+                </div>
+                <button type="button" class="btn btn-sm border-0 p-0 shadow-none"
+                  :disabled="contentQueue.includes(e.content_id)"
+                  :title="contentQueue.includes(e.content_id) ? 'Already in the play sequence' : 'Add timed content to play sequence'"
+                  @click="addTimedContentToQueue(e)">
+                  <Plus class="text-warning" />
+                </button>
+              </div>
+              <!-- empty state -->
+              <div v-if="timedContent.length === 0" class="empty-state">
+                No timed content yet. Attach existing content to an event in the Calendar
+                and it will appear here for its scheduled window.
               </div>
             </div>
           </div>
@@ -138,6 +172,7 @@ export default {
     return {
       error: '',
       content: [],
+      events: [],
       form: {
         id: null,
         name: null,
@@ -153,10 +188,16 @@ export default {
     }
   },
   methods: {
+    authorName(empNum) {
+      return this.employees.find((e) => e.number === empNum)?.name || "Unknown";
+    },
+    async loadContent() {
+      this.content = (await this.$axios.get(this.$api + '?content')).data;
+    },
     async deletePlaylist() {
       try {
         if (!window.confirm('Are you sure you want to delete this playlist?')) return;
-        await this.$axios.post(this.$api + 'playlists?delete', {
+        await this.$axios.post(this.$api + '?playlists&delete', {
           id: parseInt(this.form.id)
         });
         this.$emit('deleted');
@@ -202,6 +243,35 @@ export default {
     addContentToQueue(item) {
       if (!item || item.id === undefined || item.id === null) return;
       const id = Number(item.id);
+      if (Number.isNaN(id)) return;
+      if (!this.contentQueue.includes(id)) {
+        this.contentQueue.push(id);
+      }
+    },
+    contentTitle(contentId) {
+      const c = this.content.find((c) => Number(c.id) === Number(contentId));
+      return c?.title ?? `Content #${contentId}`;
+    },
+    formatEventRange(start, end) {
+      const fmt = (v) =>
+        new Date(v).toLocaleString(undefined, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit"
+        });
+      return `${fmt(start)} – ${fmt(end)}`;
+    },
+    /**
+     * Adds the content attached to a timed event to the play sequence.
+     * The queue stores content ids (not event ids), so an id can only appear once —
+     * any untimed entry for that content is automatically superseded by this timed one
+     * (the slideshow then decides visibility from the event start/end window).
+     */
+    addTimedContentToQueue(ev) {
+      if (!ev || ev.content_id === null || ev.content_id === undefined) return;
+      const id = Number(ev.content_id);
       if (Number.isNaN(id)) return;
       if (!this.contentQueue.includes(id)) {
         this.contentQueue.push(id);
@@ -274,9 +344,9 @@ export default {
         // ids (index 0 plays first), or null when no content is assigned
         this.form.content = this.contentQueue.length > 0 ? this.contentQueue.join(",") : null;
 
-        if (!window.confirm('Are you sure you want to save these changes?\n\n' + JSON.stringify(this.form, null, 2))) return;
+        // if (!window.confirm('Are you sure you want to save these changes?\n\n' + JSON.stringify(this.form, null, 2))) return;
 
-        await this.$axios.post(this.$api + 'playlists?update', { ...this.form });
+        await this.$axios.post(this.$api + '?playlists&update', { ...this.form });
         this.$emit('updated');
         this.$modal.hide('edit-playlist-modal');
         this.toast.show("Playlist Updated", "The playlist has been successfully updated.", "bg-success-subtle text-success-emphasis");
@@ -289,24 +359,36 @@ export default {
   computed: {
     /**
      * Resolves the ordered content ids in the queue to their full content
-     * records (loaded from the `content?all` endpoint) for display.
+     * records (loaded from the `?content` endpoint) for display.
      * Falls back to a placeholder row if an id is not present in the list.
      */
     queueItems() {
-      return this.contentQueue.map((id) => (
-        this.content.find((c) => Number(c.id) === id) || {
+      const timedIds = new Set(this.timedContent.map((e) => e.content_id));
+      return this.contentQueue.map((id) => {
+        const record = this.content.find((c) => Number(c.id) === id) || {
           id,
           filename: `Content #${id}`,
           title: "Missing from content list",
           type: "unknown"
-        }
-      ));
+        };
+        return { ...record, isTimed: timedIds.has(Number(id)) };
+      });
     },
     sortedContent() {
       return [...this.content].sort((a, b) => {
         if (a.filename === b.filename) return 0;
         return a.filename < b.filename ? -1 : 1
-      })
+      }).filter((c) => c.status === 'active');
+    },
+    /**
+     * All events that have a content file attached — the "Timed Content" source list.
+     * Events without a file keep content_id = null and are ignored.
+     */
+    timedContent() {
+      return this.events
+        .filter((e) => e.content_id !== null && e.content_id !== undefined && e.content_id !== "")
+        .map((e) => ({ ...e, content_id: Number(e.content_id) }))
+        .sort((a, b) => new Date(a.start) - new Date(b.start));
     },
     createdByName() {
       return this.employees.find((e) => e.number === this.form.created_by)?.name;
@@ -318,10 +400,15 @@ export default {
   async mounted() {
     clearModalFocus(this.$refs.editPlaylistModal);
 
-    this.content = (await this.$axios.get(this.$api + 'content?all')).data;
+    // refresh the content library whenever the modal opens, so content deleted or
+    // uploaded elsewhere shows up
+    this.$refs.editPlaylistModal.addEventListener('show.bs.modal', () => this.loadContent());
+
+    this.loadContent();
+    this.events = (await this.$axios.get(this.$api + '?events')).data;
 
     // the playlist prop watcher can fire before the content list finishes loading,
-    // so re-seed the play sequence now that it is available
+    // re-seed the play sequence now that it is available
     if (this.playlist) {
       this.seedContentQueue(this.playlist.content);
     }
@@ -329,9 +416,10 @@ export default {
   watch: {
     playlist: {
       immediate: true,
-      handler() {
+      async handler() {
         if (this.playlist) {
           this.setPlaylist(this.playlist);
+          this.events = (await this.$axios.get(this.$api + '?events')).data;
         }
       }
     }
@@ -408,8 +496,8 @@ export default {
   line-height: 1.15;
 }
 
-.item-info > span,
-.item-info > small {
+.item-info>span,
+.item-info>small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

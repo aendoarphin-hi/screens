@@ -1,6 +1,6 @@
 <template>
   <!-- modal -->
-  <div class="modal fade" id="create-event-modal" ref="createEventModal" tabindex="-1">
+  <div class="modal px-3 fade" id="create-event-modal" ref="createEventModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
       <div class="modal-content shadow">
         <div class="modal-header">
@@ -106,7 +106,7 @@
             <select id="event-create-content" class="form-select form-select-sm" v-model="newEvent.content_id">
               <option :value="null">No Content</option>
               <option v-for="c in sortedContent" :key="c.id" :value="parseInt(c.id)">
-                {{ c.filename }}
+                {{ c.title }}
               </option>
             </select>
             <small class="text-muted d-block">Select existing content to display during this event. (optional)</small>
@@ -119,8 +119,8 @@
             Cancel
           </button>
 
-          <button type="button" :disabled="!canSave" :class="{ disabled: !canSave}" @click="createEvent" class="btn btn-sm btn-success"
-            title="Create Event">
+          <button type="button" :disabled="!canSave" :class="{ disabled: !canSave }" @click="createEvent"
+            class="btn btn-sm btn-success" title="Create Event">
             + Create
           </button>
         </div>
@@ -174,9 +174,9 @@ export default {
 
       clearModalFocus(this.$refs.createEventModal);
 
-      this.locations = (await this.$axios.get(this.$api + "locations?all")).data;
-      this.employees = (await this.$axios.get(this.$api + "employees?all")).data;
-      this.content = (await this.$axios.get(this.$api + "content?all")).data;
+      this.locations = (await this.$axios.get(this.$api + "?locations")).data;
+      this.employees = (await this.$axios.get(this.$api + "?employees")).data;
+      this.content = (await this.$axios.get(this.$api + "?content")).data;
     } catch (error) {
       console.log(error);
     }
@@ -195,7 +195,7 @@ export default {
       return [...this.content].sort((a, b) => {
         if (a.filename === b.filename) return 0;
         return a.filename < b.filename ? -1 : 1
-      })
+      }).filter((c) => c.status === 'active');
     },
     canSave() {
       const requiredFieldsFilled =
@@ -246,9 +246,9 @@ export default {
         this.newEvent.content_id = this.newEvent.content_id ? parseInt(this.newEvent.content_id) : null;
         // if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
         // post
-        await this.$axios.post(this.$api + "events?new", this.newEvent);
+        await this.$axios.post(this.$api + "?events&new", this.newEvent);
         // log activity
-        await this.$axios.post(this.$api + "activity?new", {
+        await this.$axios.post(this.$api + "?activity&new", {
           enum: parseInt(this.store.authenticated.number),
           action: "create",
           entity_type: "event",
@@ -259,9 +259,9 @@ export default {
         this.$emit("created")
         this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
         // update the null entity_id value in the new activity log
-        const latestEvent = (await this.$axios.get(this.$api + "events?all")).data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].id;
-        const latestActivity = (await this.$axios.get(this.$api + "activity?all")).data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].id;
-        await this.$axios.post(this.$api + "activity?update", {
+        const latestEvent = (await this.$axios.get(this.$api + "?events")).data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].id;
+        const latestActivity = (await this.$axios.get(this.$api + "?activity")).data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].id;
+        await this.$axios.post(this.$api + "?activity&update", {
           column: "entity_id",
           value: latestEvent,
           id: latestActivity,

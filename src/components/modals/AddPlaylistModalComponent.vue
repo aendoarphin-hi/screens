@@ -1,6 +1,6 @@
 <template>
   <!-- modal -->
-  <div class="modal fade" id="add-playlist-modal" ref="addPlaylistModal" tabindex="-1">
+  <div class="modal px-3 fade" id="add-playlist-modal" ref="addPlaylistModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 1000px;">
       <div class="modal-content shadow">
 
@@ -28,8 +28,8 @@
                 <input v-model="form.name" type="text" class="form-control form-control-sm" placeholder="Playlist Name">
 
                 <label class="small fw-semibold">Description</label>
-                <textarea v-model="form.description" class="form-control form-control-sm" rows="3" style="max-height: 200px;"
-                  placeholder="Playlist description (optional)"></textarea>
+                <textarea v-model="form.description" class="form-control form-control-sm" rows="3"
+                  style="max-height: 200px;" placeholder="Playlist description (optional)"></textarea>
 
                 <label class="small fw-semibold">Created By</label>
                 <input disabled type="text" class="form-control form-control-sm" :value="createdByName"
@@ -60,8 +60,8 @@
                     <span class="fw-semibold">{{ item.filename }}</span>
                     <small class="text-muted">{{ item.title }}</small>
                   </div>
-                  <button type="button" class="btn btn-sm border-0 p-0 shadow-none"
-                    title="Remove from play sequence" @click="removeFromQueue(item.id)">
+                  <button type="button" class="btn btn-sm border-0 p-0 shadow-none" title="Remove from play sequence"
+                    @click="removeFromQueue(item.id)">
                     <Close class="text-danger" />
                   </button>
                 </div>
@@ -81,8 +81,8 @@
                 <div v-for="c in sortedContent" :key="c.id" class="content-list-item"
                   :class="{ 'in-queue': contentQueue.includes(parseInt(c.id)) }">
                   <div class="item-info">
-                    <span class="fw-semibold">{{ c.filename }}</span>
-                    <small class="text-muted">{{ c.title }}</small>
+                    <span class="fw-semibold">{{ c.title }}</span>
+                    <small v-if="c.uploaded_by" class="text-muted">Uploaded by {{ authorName(c.uploaded_by) }}</small>
                   </div>
                   <button type="button" class="btn btn-sm border-0 p-0 shadow-none"
                     :disabled="contentQueue.includes(parseInt(c.id))"
@@ -128,6 +128,9 @@ export default {
     Close,
     DragVertical,
     Plus
+  },
+  props: {
+    employees: Array
   },
   inject: ['toast', 'store'],
   emits: ['created'],
@@ -237,11 +240,11 @@ export default {
           created_by: parseInt(this.store.authenticated.number)
         };
 
-        if (!window.confirm('Are you sure you want to create this playlist?\n\n' + JSON.stringify(body, null, 2))) return;
+        // if (!window.confirm('Are you sure you want to create this playlist?\n\n' + JSON.stringify(body, null, 2))) return;
 
-        await this.$axios.post(this.$api + 'playlists?new', body);
+        await this.$axios.post(this.$api + '?playlists&new', body);
         // log activity
-        await this.$axios.post(this.$api + "activity?new", {
+        await this.$axios.post(this.$api + "?activity&new", {
           enum: parseInt(this.store.authenticated.number),
           action: "create",
           entity_type: "playlist",
@@ -256,7 +259,13 @@ export default {
         this.error = error?.response?.data?.message || error?.message || String(error);
         this.toast.show("Error", "There was an error creating the playlist.", "bg-danger-subtle text-danger-emphasis");
       }
-    }
+    },
+    authorName(empNum) {
+      return this.employees.find((e) => e.number === empNum)?.name || 'Unknown';
+    },
+    async loadContent() {
+      this.content = (await this.$axios.get(this.$api + '?content')).data;
+    },
   },
   computed: {
     createdByName() {
@@ -264,7 +273,7 @@ export default {
     },
     /**
      * Resolves the ordered content ids in the queue to their full content
-     * records (loaded from the `content?all` endpoint) for display.
+     * records (loaded from the `?content` endpoint) for display.
      * Falls back to a placeholder row if an id is not present in the list.
      */
     queueItems() {
@@ -281,15 +290,20 @@ export default {
       return [...this.content].sort((a, b) => {
         if (a.filename === b.filename) return 0;
         return a.filename < b.filename ? -1 : 1
-      })
+      }).filter((c) => c.status === 'active');
     },
     canSubmit() {
       return !this.form.name || !this.form.name.trim();
-    }
+    },
   },
   async mounted() {
     clearModalFocus(this.$refs.addPlaylistModal);
-    this.content = (await this.$axios.get(this.$api + 'content?all')).data;
+
+    // refresh the content library whenever the modal opens, so content deleted or
+    // uploaded elsewhere shows up
+    this.$refs.addPlaylistModal.addEventListener('show.bs.modal', () => this.loadContent());
+
+    this.loadContent();
   }
 }
 </script>
@@ -363,8 +377,8 @@ export default {
   line-height: 1.15;
 }
 
-.item-info > span,
-.item-info > small {
+.item-info>span,
+.item-info>small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

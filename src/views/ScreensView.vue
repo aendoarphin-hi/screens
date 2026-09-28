@@ -190,7 +190,7 @@
                     </td>
                     <td class="text-end">
                       <div class="d-flex gap-2 justify-content-end" :class="{ invisible: hoverIndex !== i }">
-                        <button class="btn btn-sm btn-outline-secondary cursor-pointer">
+                        <button class="btn btn-sm btn-outline-secondary cursor-pointer" @click="openScreenPreview(s)">
                           <OpenInNew /> Preview
                         </button>
                         <button @click="openEditScreenModal(s)" class="btn btn-sm btn-outline-secondary cursor-pointer">
@@ -226,10 +226,11 @@
                     <MapMarker /> {{ s.location }}
                   </span>
                   <div class="d-flex flex-row gap-2" :class="{ 'opacity-0': hoverIndex !== i }">
-                    <span style="font-size: 10px;" @click="openScreenPreview(s)" class="w-50 text-nowrap cursor-pointer btn btn-sm btn-secondary">
+                    <button style="font-size: 10px;" @click="openScreenPreview(s)"
+                      class="w-50 text-nowrap cursor-pointer btn btn-sm btn-secondary">
                       Preview
-                    </span><span style="font-size: 10px;" @click="openEditScreenModal(s)"
-                      class="w-50 cursor-pointer mt-auto btn btn-sm btn-primary">Edit</span>
+                    </button><button style="font-size: 10px;" @click="openEditScreenModal(s)"
+                      class="w-50 cursor-pointer mt-auto btn btn-sm btn-primary">Edit</button>
                   </div>
                 </div>
               </div>
@@ -339,7 +340,7 @@
                     {{ p.description }}
                   </span>
                   <span @click="openEditPlaylistModal(p)" class="cursor-pointer mt-auto btn btn-sm btn-primary"
-                    :class="{ 'opacity-0': hoverIndex !== i }">Edit</span>
+                    :class="{ 'opacity-0': hoverIndex !== i }" style="font-size: 10px;">Edit</span>
                 </div>
               </div>
               <div v-if="playlists.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
@@ -454,7 +455,8 @@
                     <td class="text-end">
                       <div class="text-nowrap d-flex gap-3 justify-content-end"
                         :class="{ invisible: hoverIndex !== i }">
-                        <button class="btn btn-sm btn-outline-secondary cursor-pointer">
+                        <button class="btn btn-sm btn-outline-secondary cursor-pointer"
+                          @click="openEditContentModal(c)">
                           <Pencil /> Edit
                         </button>
                       </div>
@@ -473,24 +475,45 @@
               style="max-height: 70dvh">
               <div v-for="(c, i) in content" :key="c.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
                 class="card card-font-sm shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2 overflow-hidden">
-                <!-- will provide thumbnail but for now set it as the logo of file type -->
-                <!-- <img src="https://picsum.photos/400/200" class="card-img-top" alt="Thumbnail"
-                style="height: 100px; object-fit: cover" /> -->
-                <span :class="getContentThumbnail(c).class"
-                  class="justify-content-center align-items-center d-flex fs-3" style="height: 100px;">
-                  <span v-if="hoverIndex === i" style="background-color: rgba(0,0,0,0.5);"
-                    class="w-100 h-100 d-flex justify-content-center fs-5">
-                    <Pencil class="text-white" />
+                <!-- image thumbnail -->
+                <span v-if="c.thumb_url"
+                  class="animate__animated animate__fadeIn position-relative d-flex justify-content-center align-items-center"
+                  style="height: 100px;">
+                  <img :src="c.thumb_url" class="card-img-top" alt="Thumbnail"
+                    style="height: 100px; width: 100%; object-fit: cover;"
+                    :style="{ filter: hoverIndex === i ? 'brightness(0.5)' : '' }" />
+
+                  <!-- hover overlay -->
+                  <span v-if="hoverIndex === i"
+                    class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                    style="background-color: rgba(0, 0, 0, 0.2);">
+                    <Pencil class="text-white cursor-pointer fs-3" @click="openEditContentModal(c)" />
                   </span>
-                  <component v-else style="filter: drop-shadow(0 5px 3px rgba(0,0,0,0.5));"
-                    :is="getContentThumbnail(c).icon" />
                 </span>
+
+                <!-- file type thumbnail -->
+                <span v-else :class="getContentThumbnail(c).class"
+                  class="position-relative d-flex justify-content-center align-items-center" style="height: 100px;">
+                  <component :is="getContentThumbnail(c).icon"
+                    style="filter: drop-shadow(0 5px 3px rgba(0,0,0,0.5));" />
+
+                  <!-- hover overlay -->
+                  <span v-if="hoverIndex === i"
+                    class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                    style="background-color: rgba(0,0,0,0.5);">
+                    <Pencil class="text-white cursor-pointer fs-3" @click="openEditContentModal(c)" />
+                  </span>
+                </span>
+
                 <div class="card-body d-flex flex-column gap-2">
                   <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                     {{ c.title }}
                   </div>
+
                   <small>
-                    <span class="badge text-capitalize" :class="contentStatusBadgeClass(c.status)">{{ c.status }}</span>
+                    <span class="badge text-capitalize" :class="contentStatusBadgeClass(c.status)">
+                      {{ c.status }}
+                    </span>
                   </small>
                 </div>
               </div>
@@ -502,12 +525,14 @@
         </template>
       </div>
     </div>
-    <UploadContentModalComponent @uploaded="refreshTabPane('content')" />
-    <EditScreenModalComponent @updated="refreshTabPane('screens')" @deleted="refreshTabPane('screens')"
-      :screen="screenToEdit" />
-    <AddPlaylistModalComponent @created="refreshTabPane('playlists')" />
+    <UploadContentModalComponent @uploaded="fetchEndpoint()" /> <!-- update all to refresh existing content list in their modal -->
+    <EditScreenModalComponent :employees="employees" @updated="refreshTabPane('screens')"
+      @deleted="refreshTabPane('screens')" :screen="screenToEdit" />
+    <AddPlaylistModalComponent :employees="employees" @created="refreshTabPane('playlists')" />
     <EditPlaylistModalComponent :employees="employees" @updated="refreshTabPane('playlists')"
       @deleted="refreshTabPane('playlists')" :playlist="playlistToEdit" />
+    <EditContentModalComponent :employees="employees" :content="contentToEdit" @updated="refreshTabPane('content')"
+      @deleted="refreshTabPane('content')" />
   </div>
 </template>
 
@@ -537,6 +562,7 @@ import Account from "vue-material-design-icons/Account.vue";
 
 import { filterByField, inSystemGroup, searchByText, sortByField } from "@/common/helpers";
 import UploadContentModalComponent from "@/components/modals/UploadContentModalComponent.vue";
+import EditContentModalComponent from "@/components/modals/EditContentModalComponent.vue";
 import { nextTick } from "vue";
 import EditScreenModalComponent from "@/components/modals/EditScreenModalComponent.vue";
 import AddPlaylistModalComponent from "@/components/modals/AddPlaylistModalComponent.vue";
@@ -571,7 +597,8 @@ export default {
     UploadContentModalComponent,
     EditScreenModalComponent,
     AddPlaylistModalComponent,
-    EditPlaylistModalComponent
+    EditPlaylistModalComponent,
+    EditContentModalComponent
   },
   inject: ["store"],
   data() {
@@ -615,6 +642,7 @@ export default {
       activeTab: "screens", // active tab
       screenToEdit: null, // obj to pass to modal for editing
       playlistToEdit: null, // obj to pass to modal for editing
+      contentToEdit: null, // obj to pass to modal for editing
     };
   },
   computed: {
@@ -696,6 +724,13 @@ export default {
         this.activeTab = "content";
       })
     },
+    openEditContentModal(c) {
+      this.contentToEdit = { ...c };
+      nextTick(() => {
+        this.$modal.show("edit-content-modal");
+        this.activeTab = "content";
+      })
+    },
     inSystemGroup,
     clearFilters() {
       this.filters = {
@@ -750,8 +785,15 @@ export default {
       // remove underscore and capitalize
       return l.replace(/_/g, " ");
     },
-    async fetchEndpoint(endpoint) {
-      const res = await this.$axios.get(this.$api + endpoint + "?all");
+    async fetchEndpoint(endpoint = null) {
+      // fetch all three if no endpoint specified
+      if (!endpoint) {
+        this.rawScreens = (await this.$axios.get(this.$api + "?screens")).data;
+        this.rawPlaylists = (await this.$axios.get(this.$api + "?playlists")).data;
+        this.rawContent = (await this.$axios.get(this.$api + "?content")).data;
+        return;
+      }
+      const res = await this.$axios.get(this.$api + "?" + endpoint);
       switch (endpoint) {
         case "screens":
           this.rawScreens = res.data;
@@ -795,8 +837,8 @@ export default {
     contentStatusBadgeClass(status) {
       const map = {
         active: "bg-success-subtle text-success-emphasis",
-        inactive: "bg-secondary-subtle text-secondary-emphasis",
-        archived: "bg-dark-subtle text-dark-emphasis",
+        inactive: "bg-danger-subtle text-danger-emphasis",
+        archived: "bg-secondary-subtle text-secondary-emphasis",
       };
       return map[status?.toLowerCase()] || "bg-secondary";
     },
@@ -812,9 +854,9 @@ export default {
       }
 
       // get all employees
-      this.employees = (await this.$axios.get(this.$api + "employees?all")).data;
+      this.employees = (await this.$axios.get(this.$api + "?employees")).data;
       // get all locations
-      this.locations = (await this.$axios.get(this.$api + "locations?all")).data;
+      this.locations = (await this.$axios.get(this.$api + "?locations")).data;
 
       await Promise.all(this.endpoints.map((endpoint) => this.fetchEndpoint(endpoint)));
 
@@ -830,7 +872,7 @@ export default {
       }
     },
     "search"() {
-      console.log(this.search)
+      // console.log(this.search)
     },
     "activeTab"() {
       this.clearFilters();

@@ -103,7 +103,7 @@ export default {
   async mounted() {
     try {
       this.initializing = true;
-      await this.$axios.get(this.$api + 'screens?all').then(res => {
+      await this.$axios.get(this.$api + '?screens').then(res => {
         this.screens = res.data;
       })
       this.initializing = false;
@@ -137,8 +137,8 @@ export default {
 
       try {
         const [devicesRes, screensRes] = await Promise.all([
-          this.$axios.get(this.$api + 'screens?networkdevices'),
-          this.$axios.get(this.$api + 'screens?all')
+          this.$axios.get(this.$api + '?screens&networkdevices'),
+          this.$axios.get(this.$api + '?screens')
         ]);
 
         this.availableDevices = devicesRes.data;

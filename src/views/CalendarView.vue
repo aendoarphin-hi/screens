@@ -3,7 +3,8 @@
     <!-- help modal -->
     <HelpModalComponent>
       <p>
-        The calendar is used <strong>ONLY</strong> to schedule screen content for a specific date and time.
+        The calendar is used to set a timer for an image. Link a timer to an image when creating a new event.<br/>
+        Once the event is created, it will be available in the timed content list in the edit screen window.<br/>
         Below is a list of possible event types and subtypes.
       </p>
       <div class="table-responsive">
@@ -242,7 +243,7 @@ export default {
     },
     async refreshCalendar() {
       try {
-        const res = await this.$axios.get(this.$api + "events?all")
+        const res = await this.$axios.get(this.$api + "?events")
 
         this.events = res.data
         this.processRawEvents(this.events)
@@ -303,7 +304,7 @@ export default {
     try {
       this.initializing = true;
       // initializes event data
-      this.events = (await this.$axios.get(this.$api + "events?all")).data;
+      this.events = (await this.$axios.get(this.$api + "?events")).data;
       this.processRawEvents(this.events);
       this.initializing = false;
     } catch (e) {

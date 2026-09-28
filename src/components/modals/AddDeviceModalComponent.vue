@@ -1,6 +1,6 @@
 <template>
   <!-- modal -->
-  <div class="modal fade" id="add-device-modal" ref="addDeviceModal" tabindex="-1">
+  <div class="modal px-3 fade" id="add-device-modal" ref="addDeviceModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
       <div class="modal-content shadow">
 
@@ -91,7 +91,7 @@ export default {
       try {
         this.error = '';
         // if (!window.confirm('Are you sure you want to add this screen?\n\n' + JSON.stringify(this.screen, null, 2))) return;
-        const res = await this.$axios.post(this.$api + 'screens?new', this.screen);
+        const res = await this.$axios.post(this.$api + '?screens&new', this.screen);
         // warn that screen already exists
         if (res.data.success === false && res.data.code === 200) {
           this.error = res.data.message
@@ -128,7 +128,7 @@ export default {
   },
   async mounted() {
     clearModalFocus(this.$refs.addDeviceModal);
-    this.locations = (await this.$axios.get(this.$api + 'locations?all')).data
+    this.locations = (await this.$axios.get(this.$api + '?locations')).data
   },
 }
 </script>
