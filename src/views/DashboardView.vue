@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!loading" :id="`${$route.name}-view`" class="w-100 p-3">
+  <div v-if="!loading" :id="`${$route.name}-view`" class="route-view__container">
     <!-- help modal -->
     <HelpModalComponent>
       <h5><strong>HAYDEN</strong> {{ $appname }}</h5>
@@ -12,16 +12,16 @@
     </HelpModalComponent>
 
     <!--  header + toolbar  -->
-    <div class="hstack align-items-center flex-wrap mb-4">
-      <!-- header -->
-      <div class="fs-5 fw-semibold text-capitalize d-flex align-items-center gap-2">
+    <div class="route-view__header">
+      <!-- heading -->
+      <div class="route-view__heading">
         <span>{{ $route.name }}</span>
         <span>
           <HelpCircleOutline data-bs-toggle="modal" data-bs-target="#help-modal" title="Help" class="cursor-pointer" />
         </span>
       </div>
       <!-- toolbar -->
-      <div class="hstack ms-auto fw-semibold gap-2 text-nowrap flex-wrap">
+      <div class="route-view__toolbar">
         <button class="btn btn-sm btn-success" @click="openCreateModal">+ Create Announcement</button>
         <button class="btn btn-sm btn-primary" @click="openUploadModal">
           <UploadBox /> Upload Content

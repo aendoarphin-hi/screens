@@ -60,4 +60,38 @@ export default {
 </script>
 
 <style>
+/* container sizing for all view files in /views */
+.route-view__container {
+  width: 100%;
+  padding: 1rem;
+}
+/* heading + toolbar */
+.route-view__header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  position: -webkit-sticky;
+  position: sticky;
+  margin-bottom: 1rem;
+}
+.route-view__heading {
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex ;
+  flex-direction: row ;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.route-view__toolbar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-left: auto;
+    font-weight: 600;
+    gap: 0.5rem;
+    white-space: nowrap;
+    flex-wrap: wrap;
+}
 </style>

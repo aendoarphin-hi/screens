@@ -12,7 +12,7 @@
       Please sign in to continue.
     </p>
     <div class="text-center">
-      <a class="btn btn-primary" href="http://10.10.8.156" target="_blank">
+      <a class="btn btn-primary" :href="$webroot" target="_blank">
         Sign In&nbsp;&nbsp;
         <OpenInNew />
       </a>

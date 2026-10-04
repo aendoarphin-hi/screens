@@ -22,10 +22,10 @@
 export default {
   name: "SlideshowComponent",
   props: {
-    // how long each slide is shown, in milliseconds (default 3 seconds)
+    // how long each slide is shown, in milliseconds; default to 10s
     interval: {
       type: Number,
-      default: 3000
+      default: 10000
     },
     // the image sources to cycle through, in display order.
     // if no slides are found, it will default to the hayden slide
@@ -34,6 +34,13 @@ export default {
       default: () => [
         `${process.env.BASE_URL}images/hayden-default.jpg`
       ]
+    },
+    // how often to re-fetch screen/content/events from the api so play
+    // sequence edits and timed-event windows show up without a reload
+    // (default 10 seconds)
+    refreshInterval: {
+      type: Number,
+      default: 10000
     }
   },
   data() {
@@ -43,6 +50,8 @@ export default {
       timer: null,
       // periodic check that re-evaluates timed-content windows
       clock: null,
+      // guards against overlapping api refresh polls
+      refreshing: false,
       // screen being previewed (resolved from the ?screenid route query)
       screen: null,
       // content and event records loaded from the api
@@ -106,8 +115,16 @@ export default {
         (w) => now >= new Date(w.start).getTime() && now <= new Date(w.end).getTime()
       )
     },
-    async loadData() {
+    /**
+     * Loads (or refreshes) the screen, content, and events from the api.
+     * On the initial load (silent = false) the sequence restarts from slide 1.
+     * On periodic refresh (silent = true) the sequence only restarts when the
+     * visible slide set actually changed (play sequence edit or an event
+     * window opening/closing), so an unchanged slideshow keeps playing.
+     */
+    async loadData({ silent = false } = {}) {
       if (this.activeScreenId === null) return
+      const previous = this.lastSlideSet
       try {
         // fetch the single screen by id, the full content list, and all events
         const [screenRes, contentRes, eventsRes] = await Promise.all([
@@ -121,8 +138,15 @@ export default {
         this.events = eventsRes.data
       } catch (error) {
         console.error('Slideshow data load error:', error)
-      } finally {
-        this.lastSlideSet = this.dataSlides
+        return
+      }
+      // compare the freshly resolved slide set against the last one we showed
+      const current = this.dataSlides
+      const changed =
+        current.length !== previous.length ||
+        current.some((url, i) => url !== previous[i])
+      this.lastSlideSet = current
+      if (changed || !silent) {
         this.currentIndex = 0
         this.startSlideshow()
       }
@@ -140,22 +164,30 @@ export default {
         this.timer = null
       }
     },
-    // every 30s re-evaluate timed windows; when the visible set changes
-    // (an event window opened/closed), start the sequence over from slide 1
+    // every refreshInterval ms re-fetch the data so play sequence edits and
+    // timed-event windows appear without reloading the page. when the visible
+    // slide set changes, loadData() starts the sequence over from slide 1.
     startClock() {
       this.stopClock()
       this.clock = setInterval(() => {
-        if (this.activeScreenId === null) return
-        const current = this.dataSlides
-        const changed =
-          current.length !== this.lastSlideSet.length ||
-          current.some((url, i) => url !== this.lastSlideSet[i])
-        if (changed) {
-          this.lastSlideSet = current
-          this.currentIndex = 0
-          this.startSlideshow()
-        }
-      }, 30000)
+        this.refreshData()
+      }, this.refreshInterval)
+    },
+    /**
+     * Silent data refresh for the poll loop. Guards against overlapping
+     * requests if the api is slower than the refresh interval.
+     */
+    async refreshData() {
+      if (this.activeScreenId === null) return
+      if (this.refreshing) return
+      this.refreshing = true
+      try {
+        await this.loadData({ silent: true })
+      } catch (error) {
+        console.error('Slideshow data refresh error:', error)
+      } finally {
+        this.refreshing = false
+      }
     },
     stopClock() {
       if (this.clock) {

@@ -1,7 +1,7 @@
 <template>
   <!-- modal -->
   <div class="modal px-3 fade" id="create-event-modal" ref="createEventModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: max-content;">
       <div class="modal-content shadow">
         <div class="modal-header">
           <div class="d-flex align-items-center w-100">
@@ -12,104 +12,131 @@
         </div>
         <!-- help description -->
         <div class="modal-body">
-          <transition enter-active-class="animate__animated animate__fadeIn animate__faster">
-            <!-- error message -->
-            <div v-if="error.length > 0" class="mb-2 p-2 small rounded bg-danger-subtle text-danger-emphasis">
-              {{ error }}
+          <div class="d-flex flex-column flex-md-row gap-3">
+            <div class="w-100">
+              <transition enter-active-class="animate__animated animate__fadeIn animate__faster">
+                <!-- error message -->
+                <div v-if="error.length > 0" class="mb-2 p-2 small rounded bg-danger-subtle text-danger-emphasis">
+                  {{ error }}
+                </div>
+              </transition>
+              <p class="small text-muted">
+                Create a scheduled event by filling in the details below.
+              </p>
+              <!-- event creation fields -->
+              <!-- title text -->
+              <div class="w-100">
+                <input type="text" class="form-control form-control-sm mb-2" placeholder="Event Title"
+                  id="event-create-title" v-model="newEvent.title" />
+              </div>
+
+              <!-- type + subtype dropdown-->
+              <div class="mb-2 d-flex flex-row gap-2 w-100">
+                <select id="event-create-type" class="form-select form-select-sm text-capitalize"
+                  v-model="newEvent.type">
+                  <option value="">Select Type</option>
+                  <option class="text-capitalize" v-for="t in types" :key="t" :value="t">
+                    {{ t }}
+                  </option>
+                </select>
+
+                <select id="event-create-subtype" :disabled="this.newEvent.type.length === 0"
+                  class="form-select form-select-sm text-capitalize" v-model="newEvent.subtype">
+                  <option value="">Select Subtype</option>
+                  <option class="text-capitalize" v-for="st in subtypes" :key="st" :value="st">
+                    {{ st }}
+                  </option>
+                </select>
+              </div>
+              <label for="event-create-employee" class="small">Employee events can be tied to a specific
+                employee</label>
+              <!-- employee selection if type is employee -->
+              <div class="mb-2">
+                <select :disabled="newEvent.type !== 'employee'" id="event-create-employee"
+                  class="form-select form-select-sm" v-model="newEvent.employee_num">
+                  <option :value="null">Select Employee</option>
+                  <option v-for="employee in employees.sort((a, b) => a.name.localeCompare(b.name))"
+                    :key="employee.number" :value="employee.number">
+                    {{ employee.name }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- description text -->
+              <div class="mb-2">
+                <textarea id="event-create-description" class="form-control form-control-sm"
+                  style="min-height: 100px; resize: none;" v-model="newEvent.description"
+                  placeholder="What is this event about? (optional)"></textarea>
+              </div>
+              <!-- help description -->
+              <p class="small text-muted lh-sm mb-0">
+                The start and end date/time of the event will determine how long the content will be visible.
+              </p>
+              <!-- date range -->
+              <div class="mb-2 d-flex flex-wrap w-100">
+                <div class="col">
+                  <label for="event-create-start-date" class="small">Start</label>
+                  <input type="datetime-local" step="1" class="text-uppercase form-control form-control-sm"
+                    id="event-create-start-date" v-model="newEvent.start" />
+                </div>
+                <div class="col">
+                  <label for="event-create-end-date" class="small">End</label>
+                  <input type="datetime-local" step="1" :disabled="newEvent.allDay"
+                    class="text-uppercase form-control form-control-sm" id="event-create-end-date"
+                    v-model="newEvent.end" />
+                </div>
+              </div>
+
+              <!-- locations dropdown -->
+              <select id="event-create-location" :disabled="newEvent.companyWide"
+                class="form-select form-select-sm mb-2" v-model="newEvent.location_id">
+                <option :value="null">Select Location</option>
+                <option v-for="location in locations" :key="location.name + '-' + location.id" :value="location.id">
+                  {{ location.name }}
+                </option>
+              </select>
+
+              <!-- event flags -->
+              <span class="hstack gap-2 align-items-center mb-1" :disabled="newEvent.companyWide">
+                <label for="event-create-all-day" class="small text-nowrap">One-day Event</label>
+                <input type="checkbox" class="form-check-input my-0" id="event-create-all-day"
+                  v-model="newEvent.allDay">
+                <label for="event-create-company-wide" class="small text-nowrap">All Locations</label>
+                <input type="checkbox" class="form-check-input my-0" id="event-create-company-wide"
+                  v-model="newEvent.companyWide">
+              </span>
+
+              <!-- existing content selection -->
+              <div>
+                <label for="event-create-content" class="small">Content</label>
+                <select id="event-create-content" class="form-select form-select-sm" :disabled="newEvent.playlist_id"
+                  v-model="newEvent.content_id">
+                  <option :value="null">Select Content</option>
+                  <option v-for="c in sortedContent" :key="c.id" :value="parseInt(c.id)">
+                    {{ c.title }}
+                  </option>
+                </select>
+                <small class="text-muted d-block">Select existing content to display during this event.
+                  (optional)</small>
+              </div>
+
+              <!-- existing playlist selection -->
+              <div>
+                <label for="event-create-playlist" class="small">Playlist</label>
+                <select id="event-create-playlist" class="form-select form-select-sm" v-model="newEvent.playlist_id">
+                  <option :value="null">Select Playlist</option>
+                  <option v-for="p in sortedPlaylists" :key="p.id" :value="parseInt(p.id)">
+                    {{ p.name }}
+                  </option>
+                </select>
+                <small class="text-muted d-block">Select existing playlist to display during this event.
+                  (optional)</small>
+              </div>
             </div>
-          </transition>
-          <p class="small text-muted">
-            Create a scheduled event by filling in the details below.
-          </p>
-          <!-- event creation fields -->
-          <!-- title text -->
-          <div class="w-100">
-            <input type="text" class="form-control form-control-sm mb-2" placeholder="Event Title"
-              id="event-create-title" v-model="newEvent.title" />
-          </div>
-
-          <!-- type + subtype dropdown-->
-          <div class="mb-2 d-flex flex-row gap-2 w-100">
-            <select id="event-create-type" class="form-select form-select-sm text-capitalize" v-model="newEvent.type">
-              <option value="">Select Type</option>
-              <option class="text-capitalize" v-for="t in types" :key="t" :value="t">
-                {{ t }}
-              </option>
-            </select>
-
-            <select id="event-create-subtype" :disabled="this.newEvent.type.length === 0"
-              class="form-select form-select-sm text-capitalize" v-model="newEvent.subtype">
-              <option value="">Select Subtype</option>
-              <option class="text-capitalize" v-for="st in subtypes" :key="st" :value="st">
-                {{ st }}
-              </option>
-            </select>
-          </div>
-          <label for="event-create-employee" class="small">Employee events can be tied to a specific employee</label>
-          <!-- employee selection if type is employee -->
-          <div class="mb-2">
-            <select :disabled="newEvent.type !== 'employee'" id="event-create-employee"
-              class="form-select form-select-sm" v-model="newEvent.employee_num">
-              <option :value="null">Select Employee</option>
-              <option v-for="employee in employees.sort((a, b) => a.name.localeCompare(b.name))" :key="employee.number"
-                :value="employee.number">
-                {{ employee.name }}
-              </option>
-            </select>
-          </div>
-
-          <!-- description text -->
-          <div class="mb-2">
-            <textarea id="event-create-description" class="form-control form-control-sm"
-              style="min-height: 100px; resize: none;" v-model="newEvent.description"
-              placeholder="What is this event about? (optional)"></textarea>
-          </div>
-          <!-- help description -->
-          <p class="small text-muted lh-sm mb-0">
-            The start and end date/time of the event will determine how long the content will be visible.
-          </p>
-          <!-- date range -->
-          <div class="mb-2 d-flex flex-row gap-2 w-100">
-            <div class="col">
-              <label for="event-create-start-date" class="small">Start</label>
-              <input type="datetime-local" step="1" class="text-uppercase form-control form-control-sm"
-                id="event-create-start-date" v-model="newEvent.start" />
+            <div class="playlist-content-container">
+              <div class="playlist-list">User can choose one playlist here</div>
+              <div class="content-list">User can choose multiple content here</div>
             </div>
-            <div class="col">
-              <label for="event-create-end-date" class="small">End</label>
-              <input type="datetime-local" step="1" :disabled="newEvent.allDay"
-                class="text-uppercase form-control form-control-sm" id="event-create-end-date" v-model="newEvent.end" />
-            </div>
-          </div>
-
-          <!-- locations dropdown -->
-          <select id="event-create-location" :disabled="newEvent.companyWide" class="form-select form-select-sm mb-2"
-            v-model="newEvent.location_id">
-            <option :value="null">Select Location</option>
-            <option v-for="location in locations" :key="location.name + '-' + location.id" :value="location.id">
-              {{ location.name }}
-            </option>
-          </select>
-
-          <!-- event flags -->
-          <span class="hstack gap-2 align-items-center mb-1" :disabled="newEvent.companyWide">
-            <label for="event-create-all-day" class="small text-nowrap">One-day Event</label>
-            <input type="checkbox" class="form-check-input my-0" id="event-create-all-day" v-model="newEvent.allDay">
-            <label for="event-create-company-wide" class="small text-nowrap">All Locations</label>
-            <input type="checkbox" class="form-check-input my-0" id="event-create-company-wide"
-              v-model="newEvent.companyWide">
-          </span>
-
-          <!-- existing content selection -->
-          <div>
-            <label for="event-create-content" class="small">Content</label>
-            <select id="event-create-content" class="form-select form-select-sm" v-model="newEvent.content_id">
-              <option :value="null">No Content</option>
-              <option v-for="c in sortedContent" :key="c.id" :value="parseInt(c.id)">
-                {{ c.title }}
-              </option>
-            </select>
-            <small class="text-muted d-block">Select existing content to display during this event. (optional)</small>
           </div>
         </div>
 
@@ -156,11 +183,13 @@ export default {
         location_id: null, // optional
         employee_num: null, // optional
         content_id: null, // optional
+        playlist_id: null, // optional
         companyWide: false // optional
       },
       locations: [],
       employees: [],
       content: [],
+      playlists: [],
       error: ""
     };
   },
@@ -177,6 +206,7 @@ export default {
       this.locations = (await this.$axios.get(this.$api + "?locations")).data;
       this.employees = (await this.$axios.get(this.$api + "?employees")).data;
       this.content = (await this.$axios.get(this.$api + "?content")).data;
+      this.playlists = (await this.$axios.get(this.$api + "?playlists")).data;
     } catch (error) {
       console.log(error);
     }
@@ -196,6 +226,12 @@ export default {
         if (a.filename === b.filename) return 0;
         return a.filename < b.filename ? -1 : 1
       }).filter((c) => c.status === 'active');
+    },
+    sortedPlaylists() {
+      return [...this.playlists].sort((a, b) => {
+        if (a.name === b.name) return 0;
+        return a.name < b.name ? -1 : 1
+      })
     },
     canSave() {
       const requiredFieldsFilled =
@@ -244,7 +280,7 @@ export default {
         this.newEvent.location_id = this.newEvent.location_id ? parseInt(this.newEvent.location_id) : null;
         this.newEvent.employee_num = this.newEvent.employee_num ? parseInt(this.newEvent.employee_num) : null;
         this.newEvent.content_id = this.newEvent.content_id ? parseInt(this.newEvent.content_id) : null;
-        // if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
+        if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
         // post
         await this.$axios.post(this.$api + "?events&new", this.newEvent);
         // log activity
@@ -342,6 +378,13 @@ export default {
         }
       },
     },
+    'newEvent.playlist_id': {
+      handler(newValue) {
+        if (newValue) {
+          this.newEvent.content_id = null;
+        }
+      },
+    },
     range: {
       handler(newValue) {
         const start = new Date(newValue.start);
@@ -368,4 +411,18 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.playlist-content-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+  height: 100%;
+  width: 100%;
+}
+.playlist-list, .content-list {
+  background: red;
+}
+</style>

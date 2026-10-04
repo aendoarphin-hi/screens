@@ -2,7 +2,7 @@
   <div v-if="userdata" class="d-flex justify-content-center align-items-center">
     <div class="card shadow-sm p-4" style="width: 600px; max-width: 90vw;">
 
-      <!-- Header -->
+      <!-- heading -->
       <div class="text-center mb-4">
         <AccountCircle class="text-secondary" style="font-size: 90px;" />
         <h3 class="mt-2 mb-0">{{ userdata.name }}</h3>

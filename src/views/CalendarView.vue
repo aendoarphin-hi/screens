@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!initializing" :id="`${$route.name}-view`" class="w-100 p-3">
+  <div v-if="!initializing" :id="`${$route.name}-view`" class="route-view__container">
     <!-- help modal -->
     <HelpModalComponent>
       <p>
@@ -25,16 +25,16 @@
       </div>
     </HelpModalComponent>
     <!--  header + toolbar  -->
-    <div class="hstack align-items-center flex-wrap position-sticky">
-      <!-- header -->
-      <div class="fs-5 fw-semibold text-capitalize d-flex align-items-center gap-2">
+    <div class="route-view__header">
+      <!-- heading -->
+      <div class="route-view__heading">
         <span>{{ $route.name }}</span>
         <span>
           <HelpCircleOutline data-bs-toggle="modal" data-bs-target="#help-modal" title="Help" class="cursor-pointer" />
         </span>
       </div>
       <!-- toolbar -->
-      <div class="hstack ms-auto fw-semibold gap-2 text-nowrap flex-wrap">
+      <div class="route-view__toolbar">
         <div class="btn btn-sm btn-success" @click="openCreateEvent">
           + Create Event
         </div>

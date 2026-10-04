@@ -25,6 +25,7 @@ debounce();
 const app = createApp(App);
 
 app.config.globalProperties = {
+  $webroot: config.webroot,
   $appname: config.appName,
   $version: config.appVersion,
   $env: process.env.NODE_ENV,

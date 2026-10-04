@@ -25,35 +25,35 @@
           <!-- read-only content info -->
           <div class="d-flex flex-column gap-2">
             <div class="row">
-              <div class="col">
+              <div class="col-6">
                 <label class="small fw-semibold">Type</label><br />
-                <span class="text-uppercase">
+                <span class="text-capitalize">
                   {{ displayValue(form.type) }}
                 </span>
               </div>
 
-              <div class="col">
+              <div class="col-6">
                 <label class="small fw-semibold">Title</label><br />
                 <span class="small">{{ displayValue(form.title) }}</span>
               </div>
             </div>
             <div class="row">
-              <div class="col">
+              <div class="col-6">
                 <label class="small fw-semibold d-block">URL</label>
                 <small class="text-muted d-block text-truncate" :title="form.url">{{ displayValue(form.url) }}</small>
               </div>
 
-              <div class="col">
+              <div class="col-6">
                 <label class="small fw-semibold d-block">Uploaded By</label>
                 <span class="small">{{ authorName(form.uploaded_by) }}</span>
               </div>
             </div>
             <div class="row">
-              <div class="col">
+              <div class="col-6">
                 <label class="small fw-semibold d-block">Created At</label>
                 <span class="small">{{ formatTimestamp(form.created_at) }}</span>
               </div>
-              <div class="col">
+              <div class="col-6">
                 <label class="small fw-semibold d-block">Updated At</label>
                 <span class="small">{{ formatTimestamp(form.updated_at) }}</span>
               </div>
@@ -180,12 +180,12 @@ export default {
     },
     contentTypeBadgeClass(type) {
       const map = {
-        image: "bg-success-subtle text-success-emphasis text-uppercase",
-        video: "bg-primary-subtle text-primary-emphasis text-uppercase",
-        pdf: "bg-warning-subtle text-warning-emphasis text-uppercase",
-        other: "bg-body-secondary text-muted text-uppercase",
+        image: "bg-success-subtle text-success-emphasis text-capitalize",
+        video: "bg-primary-subtle text-primary-emphasis text-capitalize",
+        pdf: "bg-warning-subtle text-warning-emphasis text-capitalize",
+        other: "bg-body-secondary text-muted text-capitalize",
       };
-      return map[type?.toLowerCase()] || "bg-secondary text-secondary-emphasis text-uppercase";
+      return map[type?.toLowerCase()] || "bg-secondary text-secondary-emphasis text-capitalize";
     },
     statusBadgeClass(status) {
       const map = {

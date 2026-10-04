@@ -2,7 +2,7 @@
   <aside id="sidebar" :class="{ 'collapsed': !isOpen }">
     <router-link id="sidebar-header" to="/dashboard" class="d-flex align-items-center text-decoration-none mx-auto">
       <img src="@/assets/img/hayden-blue.svg" alt="Hayden Logo" class="me-2" />
-      <span class="fs-4 text-dark text-nowrap"><strong>HAYDEN</strong> {{ $appname }}</span>
+      <span class="fs-4 text-dark text-nowrap"><strong>HAYDEN</strong> <span class="text-primary">{{ $appname }}</span></span>
     </router-link>
     <span class="w-100 text-center text-muted" style="font-size: 10px;">v{{ $version }}</span>
     <hr />
@@ -16,7 +16,7 @@
         </router-link>
       </li>
       <li class="nav-item">
-        <a href="http://10.10.8.156" class="nav-link text-capitalize hstack align-items-center">
+        <a :href="$webroot" class="nav-link text-capitalize hstack align-items-center">
           <span>
             <Logout />
           </span>&nbsp;&nbsp;<span>Exit</span>
@@ -30,7 +30,7 @@
           {{ user.name.split(" ")[0][0] + user.name.split(" ")[1][0] }}
         </small>&nbsp;&nbsp;<span class="text-nowrap">{{ user.name }}</span>
       </router-link>
-      <a v-else href="http://10.10.8.156" class="text-decoration-none">
+      <a v-else :href="$webroot" class="text-decoration-none">
         <AccountCircle />&nbsp;&nbsp;<span>Sign In</span>
       </a>
     </div>

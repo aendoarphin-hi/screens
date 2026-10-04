@@ -1,5 +1,5 @@
 <template>
-  <div :id="`${$route.name}-view`" class="w-100 p-3">
+  <div :id="`${$route.name}-view`" class="route-view__container">
     <!-- help modal -->
     <HelpModalComponent>
       <h5>Navigation</h5>
@@ -48,16 +48,16 @@
     </HelpModalComponent>
 
     <!--  header + toolbar  -->
-    <div class="hstack align-items-center flex-wrap position-sticky mb-3">
-      <!-- header -->
-      <div class="fs-5 fw-semibold text-capitalize d-flex align-items-center gap-2">
+    <div class="route-view__header">
+      <!-- heading -->
+      <div class="route-view__heading">
         <span>{{ $route.name }}</span>
         <span>
           <HelpCircleOutline data-bs-toggle="modal" data-bs-target="#help-modal" title="Help" class="cursor-pointer" />
         </span>
       </div>
       <!-- toolbar -->
-      <div class="hstack ms-auto fw-semibold gap-2 text-nowrap flex-wrap">
+      <div class="route-view__toolbar">
         <!-- add any toolbar buttons here if needed in the future -->
         <button class="btn btn-sm btn-success" @click="openNewPlaylistModal">
           <PlaylistPlay /> New Playlist
@@ -91,10 +91,14 @@
           </div>
         </template>
         <template v-else>
-          <!-- =======================  SCREENS TAB VIEW   =============================== -->
+
+          <!--===============================================================================================================
+          TAB VIEW - SCREENS
+          ===================================================================================================================-->
+
           <div class="tab-pane px-0 fade show" :class="activeTab === 'screens' ? 'show active' : ''" id="screens">
             <!-- filters, sort, view toggle row -->
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <div class="tab-pane__toolbar">
               <!-- Filters -->
               <div class="hstack gap-2 flex-wrap">
                 <small>
@@ -159,10 +163,10 @@
             <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search"
               v-model="search" />
             <!-- list view -->
-            <div v-if="viewMode === 'list'" class="table-responsive border-top border-bottom">
+            <div v-if="viewMode === 'list'" class="table-responsive">
               <table v-if="screens.length > 0" class="table table-hover align-middle mb-0">
                 <thead class="table-light sticky-top shadow-sm text-nowrap small">
-                  <tr class="text-uppercase">
+                  <tr>
                     <th v-for="(sc, i) in sortableColumns.screens" class="cursor-pointer" v-bind:key="i"
                       @click="sortList(sc)">
                       {{ columnLabel(sc) }}
@@ -201,17 +205,17 @@
                   </tr>
                 </tbody>
               </table>
-              <div v-if="screens.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
+              <div v-if="screens.length === 0" class="emtpy-state">
                 <span class="text-muted">No screens found.</span>
               </div>
             </div>
 
             <!-- grid view -->
             <div v-else-if="viewMode === 'grid'"
-              class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
+              class="tab-pane__gridview"
               style="max-height: 70dvh">
               <div v-for="(s, i) in screens" :key="s.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
-                class="card card-font-sm shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2">
+                class="card border col-12 col-md-5 col-lg-3 col-xl-2">
                 <div class="card-body d-flex flex-column gap-2">
                   <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                     <Television /> {{ s.title }}
@@ -234,15 +238,19 @@
                   </div>
                 </div>
               </div>
-              <div v-if="screens.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
+              <div v-if="screens.length === 0" class="empty-state">
                 <span class="text-muted">No screens found.</span>
               </div>
             </div>
           </div>
-          <!-- =======================  PLAYLIST TAB VIEW   =============================== -->
+
+          <!--===============================================================================================================
+          TAB VIEW - PLAYLISTS
+          ===================================================================================================================-->
+
           <div class="tab-pane px-0 fade" :class="activeTab === 'playlists' ? 'show active' : ''" id="playlists">
             <!-- sort, view toggle row -->
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <div class="tab-pane__toolbar">
               <!-- search bar 1 -->
               <input type="search" class="form-control form-control-sm col d-none d-xl-block" placeholder="Search"
                 v-model="search" />
@@ -285,10 +293,10 @@
             <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search"
               v-model="search" />
             <!-- list view -->
-            <div v-if="viewMode === 'list'" class="table-responsive border-top border-bottom">
+            <div v-if="viewMode === 'list'" class="table-responsive">
               <table v-if="playlists.length > 0" class="table table-hover align-middle mb-0">
                 <thead class="table-light sticky-top shadow-sm text-nowrap small">
-                  <tr class="text-uppercase">
+                  <tr>
                     <th v-for="(sc, i) in sortableColumns.playlists" class="cursor-pointer" v-bind:key="i"
                       @click="sortList(sc)">
                       {{ columnLabel(sc) }}
@@ -318,17 +326,17 @@
                   </tr>
                 </tbody>
               </table>
-              <div v-if="playlists.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
+              <div v-if="playlists.length === 0" class="empty-state">
                 <span class="text-muted">No playlists found.</span>
               </div>
             </div>
 
             <!-- grid view -->
             <div v-else-if="viewMode === 'grid'"
-              class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
+              class="tab-pane__gridview"
               style="max-height: 70dvh">
               <div v-for="(p, i) in playlists" :key="p.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
-                class="card card-font-sm shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2">
+                class="card border col-12 col-md-5 col-lg-3 col-xl-2">
                 <div class="card-body d-flex flex-column gap-2">
                   <span class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                     <PlaylistPlay /> {{ p.name }}
@@ -343,14 +351,18 @@
                     :class="{ 'opacity-0': hoverIndex !== i }" style="font-size: 10px;">Edit</span>
                 </div>
               </div>
-              <div v-if="playlists.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
+              <div v-if="playlists.length === 0" class="empty-state">
                 <span class="text-muted">No playlists found.</span>
               </div>
             </div>
           </div>
-          <!-- =======================  CONTENT TAB VIEW   =============================== -->
+          
+          <!--===============================================================================================================
+          TAB VIEW - CONTENT
+          ===================================================================================================================-->
+
           <div class="tab-pane px-0 fade" :class="activeTab === 'content' ? 'show active' : ''" id="content">
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <div class="tab-pane__toolbar">
               <!-- Filters -->
               <div class="hstack gap-2 flex-wrap">
                 <small>
@@ -415,13 +427,11 @@
             <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search"
               v-model="search" />
 
-            <!-- content -->
-
             <!-- list view -->
-            <div v-if="viewMode === 'list'" class="table-responsive border-top border-bottom">
+            <div v-if="viewMode === 'list'" class="table-responsive">
               <table v-if="content.length > 0" class="table table-hover align-middle mb-0">
                 <thead class="table-light sticky-top shadow-sm text-nowrap">
-                  <tr class="text-uppercase">
+                  <tr>
                     <th v-for="(sc, i) in sortableColumns.content" class="cursor-pointer" v-bind:key="i"
                       @click="sortList(sc)">
                       {{ columnLabel(sc) }}
@@ -450,7 +460,7 @@
                       <span class="text-muted text-capitalize">{{ new Date(c.created_at).toLocaleString() }}</span>
                     </td>
                     <td>
-                      <span class="text-muted">{{ c.filename }}</span>
+                      <span class="text-muted">{{ empName(c.uploaded_by) }}</span>
                     </td>
                     <td class="text-end">
                       <div class="text-nowrap d-flex gap-3 justify-content-end"
@@ -464,17 +474,17 @@
                   </tr>
                 </tbody>
               </table>
-              <div v-if="content.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
+              <div v-if="content.length === 0" class="empty-state">
                 <span class="text-muted">No content found.</span>
               </div>
             </div>
 
             <!-- grid view -->
             <div v-else-if="viewMode === 'grid'"
-              class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
+              class="tab-pane__gridview"
               style="max-height: 70dvh">
               <div v-for="(c, i) in content" :key="c.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
-                class="card card-font-sm shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2 overflow-hidden">
+                class="card border col-12 col-md-5 col-lg-3 col-xl-2">
                 <!-- image thumbnail -->
                 <span v-if="c.thumb_url"
                   class="animate__animated animate__fadeIn position-relative d-flex justify-content-center align-items-center"
@@ -517,7 +527,7 @@
                   </small>
                 </div>
               </div>
-              <div v-if="content.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
+              <div v-if="content.length === 0" class="empty-state">
                 <span class="text-muted">No content found.</span>
               </div>
             </div>
@@ -525,7 +535,8 @@
         </template>
       </div>
     </div>
-    <UploadContentModalComponent @uploaded="fetchEndpoint()" /> <!-- update all to refresh existing content list in their modal -->
+    <UploadContentModalComponent @uploaded="fetchEndpoint()" />
+    <!-- update all to refresh existing content list in their modal -->
     <EditScreenModalComponent :employees="employees" @updated="refreshTabPane('screens')"
       @deleted="refreshTabPane('screens')" :screen="screenToEdit" />
     <AddPlaylistModalComponent :employees="employees" @created="refreshTabPane('playlists')" />
@@ -630,7 +641,7 @@ export default {
       sortableColumns: {
         screens: ["name", "location", "status"],
         playlists: ["name", "description"],
-        content: ["type", "title", "status", "created_at", "filename"],
+        content: ["type", "title", "status", "created_at", "uploaded_by"],
       },
       sortDesc: {
         screens: false,
@@ -827,10 +838,10 @@ export default {
     },
     contentTypeBadgeClass(type) {
       const map = {
-        image: "bg-success-subtle text-success-emphasis text-uppercase",
-        video: "bg-primary-subtle text-primary-emphasis text-uppercase",
-        other: "bg-body-secondary text-muted text-uppercase",
-        pdf: "bg-warning-subtle text-warning-emphasis text-uppercase",
+        image: "bg-success-subtle text-success-emphasis text-capitalize",
+        video: "bg-primary-subtle text-primary-emphasis text-capitalize",
+        other: "bg-body-secondary text-muted text-capitalize",
+        pdf: "bg-warning-subtle text-warning-emphasis text-capitalize",
       };
       return map[type?.toLowerCase()] || "bg-secondary";
     },
@@ -890,13 +901,52 @@ export default {
   padding: 1rem;
 }
 
+.tab-pane__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tab-pane__gridview {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: start;
+  overflow: hidden;
+  overflow-y: auto;
+  border-bottom: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
+  border-top: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
+  padding: 1rem 0;
+}
+
+.tab-pane__gridview div.card {
+  font-size: clamp(0.8rem, 0.8vw, 1rem);
+}
+
 .table-responsive {
   max-height: 70dvh;
   overflow-y: auto;
+  border-top: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color)
 }
 
-.table> :not(caption)>*>* {
+.table-responsive .emtpy-state {
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 3rem 0;
+}
+
+.table thead tr, .table tbody tr {
   vertical-align: middle;
+}
+
+.table thead tr th {
+  text-transform: uppercase;
+  font-size: 0.8rem;
 }
 
 .table tbody tr {
@@ -923,8 +973,4 @@ export default {
   padding: 0.25rem 0.5rem;
 }
 
-.card.card-font-sm,
-.card .card-footer .btn.btn-sm {
-  font-size: 0.8rem;
-}
 </style>
