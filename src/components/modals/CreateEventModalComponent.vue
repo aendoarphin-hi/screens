@@ -105,38 +105,59 @@
                 <input type="checkbox" class="form-check-input my-0" id="event-create-company-wide"
                   v-model="newEvent.companyWide">
               </span>
-
-              <!-- existing content selection -->
-              <div>
-                <label for="event-create-content" class="small">Content</label>
-                <select id="event-create-content" class="form-select form-select-sm" :disabled="newEvent.playlist_id"
-                  v-model="newEvent.content_id">
-                  <option :value="null">Select Content</option>
-                  <option v-for="c in sortedContent" :key="c.id" :value="parseInt(c.id)">
-                    {{ c.title }}
-                  </option>
-                </select>
-                <small class="text-muted d-block">Select existing content to display during this event.
-                  (optional)</small>
-              </div>
-
-              <!-- existing playlist selection -->
-              <div>
-                <label for="event-create-playlist" class="small">Playlist</label>
-                <select id="event-create-playlist" class="form-select form-select-sm" v-model="newEvent.playlist_id">
-                  <option :value="null">Select Playlist</option>
-                  <option v-for="p in sortedPlaylists" :key="p.id" :value="parseInt(p.id)">
-                    {{ p.name }}
-                  </option>
-                </select>
-                <small class="text-muted d-block">Select existing playlist to display during this event.
-                  (optional)</small>
-              </div>
             </div>
             <div class="playlist-content-container">
-              <div class="playlist-list">User can choose one playlist here</div>
-              <div class="content-list">User can choose multiple content here</div>
+              <!-- choose one playlist -->
+              <div class="selector-section">
+                <label class="small fw-semibold">
+                  Playlist
+                  <span class="text-muted fw-normal">(choose one)</span>
+                </label>
+                <div class="playlist-list small">
+                  <div v-for="p in sortedPlaylists" :key="p.id" class="playlist-list-item"
+                    :class="{ selected: selectedPlaylistId === parseInt(p.id), disabled: playlistDisabled(p) }"
+                    role="button" tabindex="0" :aria-disabled="playlistDisabled(p)" :title="playlistTitle(p)"
+                    @click="selectPlaylist(p)" @keydown.enter="selectPlaylist(p)">
+                    <Check v-if="selectedPlaylistId === parseInt(p.id)" class="text-success" />
+                    <BlockHelper v-else-if="playlistDisabled(p)" class="text-muted" />
+                    <PlaylistPlay v-else class="text-muted" />
+                    <div class="item-info">
+                      <span class="fw-semibold">{{ p.name }}</span>
+                      <small class="text-muted">{{ playlistMeta(p) }}</small>
+                    </div>
+                  </div>
+                  <div v-if="sortedPlaylists.length === 0" class="empty-state">
+                    No playlists available.
+                  </div>
+                </div>
+              </div>
+
+              <!-- choose multiple content -->
+              <div class="selector-section">
+                <label class="small fw-semibold">
+                  Content
+                  <span class="text-muted fw-normal">(choose one or more)</span>
+                </label>
+                <div class="content-list small">
+                  <div v-for="c in sortedContent" :key="c.id" class="content-list-item"
+                    :class="{ 'in-queue': contentQueue.includes(parseInt(c.id)) }">
+                    <div class="item-info">
+                      <span class="fw-semibold">{{ c.title }}</span>
+                      <small v-if="c.uploaded_by" class="text-muted">Uploaded by {{ authorName(c.uploaded_by) }}</small>
+                    </div>
+                    <button type="button" class="btn btn-sm border-0 p-0 shadow-none"
+                      :disabled="selectedPlaylistId !== null" :title="contentButtonTitle(c)" @click="toggleContent(c)">
+                      <Plus v-if="!contentQueue.includes(parseInt(c.id))" class="text-success" />
+                      <Check v-else class="text-success" />
+                    </button>
+                  </div>
+                  <div v-if="sortedContent.length === 0" class="empty-state">
+                    No existing content available.
+                  </div>
+                </div>
+              </div>
             </div>
+
           </div>
         </div>
 
@@ -159,10 +180,18 @@
 <script>
 import { eventTypes } from "@/common/constants";
 import { clearModalFocus } from "@/common/helpers";
+import BlockHelper from "vue-material-design-icons/BlockHelper.vue";
+import Check from "vue-material-design-icons/Check.vue";
+import PlaylistPlay from "vue-material-design-icons/PlaylistPlay.vue";
+import Plus from "vue-material-design-icons/Plus.vue";
+
 
 export default {
   components: {
-
+    Check,
+    PlaylistPlay,
+    Plus,
+    BlockHelper
   },
 
   props: {
@@ -182,10 +211,14 @@ export default {
         description: "", // optional
         location_id: null, // optional
         employee_num: null, // optional
-        content_id: null, // optional
-        playlist_id: null, // optional
+        content: null, // comma-separated content ids (manual picks OR the chosen playlist's ids)
         companyWide: false // optional
       },
+      // content ids picked in the Content list
+      contentQueue: [],
+      // playlist id picked in the Playlist list (UI only — its ids are resolved
+      // into newEvent.content when the event is saved)
+      selectedPlaylistId: null,
       locations: [],
       employees: [],
       content: [],
@@ -259,10 +292,62 @@ export default {
         description: "", // optional
         location_id: null, // optional
         employee_num: null, // optional
-        content_id: null, // optional
+        content: null, // optional
         companyWide: false // optional
       };
+      this.contentQueue = [];
+      this.selectedPlaylistId = null;
       this.error = ""
+    },
+    selectPlaylist(p) {
+      // playlists without content are not selectable for an event
+      if (this.playlistDisabled(p)) return;
+      const id = Number(p.id);
+      if (this.selectedPlaylistId === id) {
+        // clicking the selected playlist deselects it
+        this.selectedPlaylistId = null;
+        return;
+      }
+      // an event can be tied to ONE playlist OR content — never both — so
+      // choosing a playlist clears any content picked so far
+      this.selectedPlaylistId = id;
+      this.contentQueue = [];
+      this.newEvent.content = null;
+    },
+    authorName(empNum) {
+      return this.employees.find((e) => e.number === empNum)?.name || 'Unknown';
+    },
+    playlistDisabled(p) {
+      return this.playlistItemCount(p) === 0;
+    },
+    playlistTitle(p) {
+      if (this.playlistDisabled(p)) return "This playlist has no content — add content to it first";
+      return this.selectedPlaylistId === parseInt(p.id)
+        ? "Click to deselect this playlist"
+        : "Choose this playlist for the event";
+    },
+    playlistMeta(p) {
+      return this.playlistDisabled(p) ? "No content" : `${this.playlistItemCount(p)} content item(s)`;
+    },
+    toggleContent(c) {
+      // a selected playlist takes precedence over content
+      if (this.selectedPlaylistId !== null) return;
+      const id = Number(c.id);
+      const i = this.contentQueue.indexOf(id);
+      if (i > -1) {
+        this.contentQueue.splice(i, 1);
+      } else {
+        this.contentQueue.push(id);
+      }
+    },
+    contentButtonTitle(c) {
+      if (this.selectedPlaylistId !== null) return "Clear the playlist selection first";
+      const id = Number(c.id);
+      return this.contentQueue.includes(id) ? "Remove from event content" : "Add to event content (can pick multiple)";
+    },
+    playlistItemCount(p) {
+      if (!p.content) return 0;
+      return String(p.content).split(",").filter((id) => String(id).trim() !== "").length;
     },
     async createEvent() {
       try {
@@ -279,10 +364,22 @@ export default {
         // parse non null string int IDs to int, otherwise default to null for db
         this.newEvent.location_id = this.newEvent.location_id ? parseInt(this.newEvent.location_id) : null;
         this.newEvent.employee_num = this.newEvent.employee_num ? parseInt(this.newEvent.employee_num) : null;
-        this.newEvent.content_id = this.newEvent.content_id ? parseInt(this.newEvent.content_id) : null;
+
+        // an event's content is always one comma-separated `content` value:
+        // the ids picked in the Content list, or — when a playlist was chosen —
+        // the ids that playlist contains (extracted here, at creation time)
+        if (this.selectedPlaylistId !== null) {
+          const playlist = this.playlists.find((p) => Number(p.id) === Number(this.selectedPlaylistId));
+          this.newEvent.content = playlist?.content || null;
+        } else {
+          this.newEvent.content = this.contentQueue.length > 0 ? this.contentQueue.join(",") : null;
+        }
+
         if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
+
         // post
         await this.$axios.post(this.$api + "?events&new", this.newEvent);
+
         // log activity
         await this.$axios.post(this.$api + "?activity&new", {
           enum: parseInt(this.store.authenticated.number),
@@ -297,6 +394,7 @@ export default {
         // update the null entity_id value in the new activity log
         const latestEvent = (await this.$axios.get(this.$api + "?events")).data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].id;
         const latestActivity = (await this.$axios.get(this.$api + "?activity")).data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].id;
+        window.alert(latestActivity);
         await this.$axios.post(this.$api + "?activity&update", {
           column: "entity_id",
           value: latestEvent,
@@ -378,13 +476,6 @@ export default {
         }
       },
     },
-    'newEvent.playlist_id': {
-      handler(newValue) {
-        if (newValue) {
-          this.newEvent.content_id = null;
-        }
-      },
-    },
     range: {
       handler(newValue) {
         const start = new Date(newValue.start);
@@ -421,8 +512,111 @@ export default {
   border-radius: 0.5rem;
   height: 100%;
   width: 100%;
+  min-width: 280px;
 }
-.playlist-list, .content-list {
-  background: red;
+
+.selector-section {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* playlist list (single select) */
+.playlist-list {
+  flex: 1 1 auto;
+  min-height: 120px;
+  max-height: 30dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+}
+
+.playlist-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.35rem;
+  background-color: var(--bs-light);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.playlist-list-item:hover {
+  border-color: var(--bs-primary);
+}
+
+.playlist-list-item.selected {
+  background-color: var(--bs-primary-bg-subtle);
+  border-color: var(--bs-primary);
+}
+
+/* existing content list (multi select) */
+.content-list {
+  flex: 1 1 auto;
+  min-height: 120px;
+  max-height: 30dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+}
+
+.content-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.35rem;
+  background-color: var(--bs-light);
+}
+
+.content-list-item.in-queue {
+  opacity: 0.55;
+}
+
+.item-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.item-info>span,
+.item-info>small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty-state {
+  padding: 1rem;
+  text-align: center;
+  color: var(--bs-secondary-color);
+}
+
+.playlist-list-item.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  user-select: none;
+  -webkit-user-select: none;
+  background-color: var(--bs-secondary-bg);
+}
+
+.playlist-list-item.disabled:hover {
+  border-color: rgba(0, 0, 0, 0.15);
 }
 </style>

@@ -119,7 +119,7 @@
               during its event's start/end window.
             </small>
             <div class="content-list small">
-              <div v-for="e in timedContent" :key="e.id" class="content-list-item"
+              <div v-for="e in timedContent" :key="e.id + '-' + e.content_id" class="content-list-item"
                 :class="{ 'in-queue': contentQueue.includes(e.content_id) }">
                 <div class="item-info">
                   <span class="fw-semibold">{{ contentTitle(e.content_id) }}</span>
@@ -451,13 +451,21 @@ export default {
       }).filter((c) => c.status === 'active');
     },
     /**
-     * All events that have a content file attached — the "Timed Content" source list.
-     * Events without a file keep content_id = null and are ignored.
-     */
+ * Every (event, content) pair from events that have content attached — the
+ * "Timed Content" source list. An event's `content` column is a
+ * comma-separated list of ids, so one event with several contents produces
+ * several timed entries. Events without content are ignored.
+ */
     timedContent() {
       return this.events
-        .filter((e) => e.content_id !== null && e.content_id !== undefined && e.content_id !== "")
-        .map((e) => ({ ...e, content_id: Number(e.content_id) }))
+        .filter((e) => e.content !== null && e.content !== undefined && e.content !== "")
+        .flatMap((e) =>
+          String(e.content)
+            .split(",")
+            .map((id) => Number(id.trim()))
+            .filter((id) => !Number.isNaN(id))
+            .map((content_id) => ({ ...e, content_id }))
+        )
         .sort((a, b) => new Date(a.start) - new Date(b.start));
     },
     sortedPlaylists() {

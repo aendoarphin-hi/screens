@@ -1,7 +1,7 @@
 <template>
   <!-- modal -->
   <div class="modal px-3 fade" id="edit-event-modal" ref="editEventModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 700px">
       <div class="modal-content shadow">
         <div class="modal-header">
           <div class="d-flex flex-column w-100 gap-1">
@@ -99,17 +99,68 @@
               v-model="editEvent.companyWide">
           </span>
 
-          <!-- existing content selection -->
-          <div class="mt-2">
-            <label for="event-edit-content" class="small fw-semibold">Content</label>
-            <select id="event-edit-content" class="form-select form-select-sm" :disabled="!editing"
-              v-model="editEvent.content_id">
-              <option :value="null">No Content</option>
-              <option v-if="orphanContent" :value="parseInt(orphanContent.id)">{{ orphanContent.title }}</option>
-              <option v-for="c in sortedContent" :key="c.id" :value="parseInt(c.id)">
-                {{ c.title }}
-              </option>
-            </select>
+          <!-- choose a playlist: replaces this event's content with that
+               playlist's content (events only store content ids) -->
+          <div class="mt-2 d-flex flex-column gap-1">
+            <label class="small fw-semibold">
+              Playlist
+              <span class="text-muted fw-normal">(choose one to replace the content)</span>
+            </label>
+            <div class="playlist-list small">
+              <div v-for="p in sortedPlaylists" :key="p.id" class="playlist-list-item"
+                :class="{ selected: matchedPlaylistId === parseInt(p.id), disabled: playlistDisabled(p) }" role="button"
+                tabindex="0" :aria-disabled="playlistDisabled(p)" :title="playlistTitle(p)" @click="selectPlaylist(p)"
+                @keydown.enter="selectPlaylist(p)">
+                <Check v-if="matchedPlaylistId === parseInt(p.id)" class="text-success" />
+                <BlockHelper v-else-if="playlistDisabled(p)" class="text-muted" />
+                <PlaylistPlay v-else class="text-muted" />
+                <div class="item-info">
+                  <span class="fw-semibold">{{ p.name }}</span>
+                  <small class="text-muted">{{ playlistMeta(p) }}</small>
+                </div>
+              </div>
+              <div v-if="sortedPlaylists.length === 0" class="empty-state">
+                No playlists available.
+              </div>
+            </div>
+            <small class="text-muted d-block">Selecting a playlist copies its content into this event.</small>
+          </div>
+
+          <!-- existing content selection: an event can hold one or more content
+               items, stored as a comma-separated list in event.content -->
+          <div class="mt-2 d-flex flex-column gap-1">
+            <label class="small fw-semibold">
+              Content
+              <span class="text-muted fw-normal">({{ contentQueue.length }})</span>
+            </label>
+            <div class="content-list small">
+              <div v-for="c in sortedContent" :key="c.id" class="content-list-item"
+                :class="{ 'in-queue': contentQueue.includes(parseInt(c.id)) }">
+                <div class="item-info">
+                  <span class="fw-semibold">{{ c.title }}</span>
+                  <small v-if="c.uploaded_by" class="text-muted">Uploaded by {{ authorName(c.uploaded_by) }}</small>
+                </div>
+                <button type="button" class="btn btn-sm border-0 p-0 shadow-none" :disabled="!editing"
+                  :title="contentButtonTitle(c)" @click="toggleContent(c)">
+                  <Plus v-if="!contentQueue.includes(parseInt(c.id))" class="text-success" />
+                  <Check v-else class="text-success" />
+                </button>
+              </div>
+              <!-- ids attached to the event that are no longer in the active content list -->
+              <div v-for="orphan in orphanContentRows" :key="'orphan-' + orphan.id" class="content-list-item in-queue">
+                <div class="item-info">
+                  <span class="fw-semibold">{{ orphan.title }}</span>
+                  <small class="text-muted">No longer in the content library</small>
+                </div>
+                <button type="button" class="btn btn-sm border-0 p-0 shadow-none" :disabled="!editing"
+                  title="Remove from event content" @click="removeQueuedContent(orphan.id)">
+                  <Close class="text-danger" />
+                </button>
+              </div>
+              <div v-if="contentQueue.length === 0" class="empty-state">
+                No content attached to this event.
+              </div>
+            </div>
             <small class="text-muted d-block">Select existing content to display during this event. (optional)</small>
           </div>
         </div>
@@ -149,6 +200,12 @@ import Pencil from "vue-material-design-icons/Pencil.vue";
 import Floppy from "vue-material-design-icons/Floppy.vue";
 import CalendarRangeOutline from "vue-material-design-icons/CalendarRangeOutline.vue";
 import MapMarker from "vue-material-design-icons/MapMarker.vue";
+import Check from "vue-material-design-icons/Check.vue";
+import Plus from "vue-material-design-icons/Plus.vue";
+import Close from "vue-material-design-icons/Close.vue";
+import BlockHelper from "vue-material-design-icons/BlockHelper.vue";
+import PlaylistPlay from "vue-material-design-icons/PlaylistPlay.vue";
+
 import { clearModalFocus, formatDate, formatDateTimeLocal } from "@/common/helpers";
 import { eventTypes } from "@/common/constants";
 
@@ -157,7 +214,12 @@ export default {
     Pencil,
     Floppy,
     CalendarRangeOutline,
-    MapMarker
+    MapMarker,
+    Check,
+    Plus,
+    Close,
+    BlockHelper,
+    PlaylistPlay
   },
   props: {
     event: Object, // original event from calendar
@@ -169,9 +231,12 @@ export default {
       editing: false,
       confirmDelete: false,
       editEvent: {}, // draft event to be updated
+      // content ids currently attached to the event (resolved from event.content)
+      contentQueue: [],
       employees: [],
       locations: [],
       content: [],
+      playlists: [],
     };
   },
   computed: {
@@ -189,7 +254,7 @@ export default {
           this.editEvent.allDay !== this.event.allDay ||
           this.editEvent.companyWide !== this.event.companyWide ||
           this.editEvent.employee_num !== this.event.employee_num ||
-          Number(this.editEvent.content_id) !== Number(this.event.content_id))
+          this.currentContent !== (this.event.content || null))
       );
     },
     types() {
@@ -211,15 +276,44 @@ export default {
       }).filter((c) => c.status === 'active');
     },
     /**
-     * The content currently linked to this event when it is no longer part of the
-     * active content list (e.g. deactivated/archived) — so view mode still shows it.
+     * The event's `content` column stores attached content ids as a
+     * comma-separated list — returned here in db-ready form.
      */
-    orphanContent() {
-      if (this.editEvent.content_id == null) return null;
-      const linked = this.content.find((c) => Number(c.id) === Number(this.editEvent.content_id));
-      if (!linked) return null;
-      return this.sortedContent.some((c) => Number(c.id) === Number(this.editEvent.content_id)) ? null : linked;
-    }
+    currentContent() {
+      return this.contentQueue.length > 0 ? this.contentQueue.join(",") : null;
+    },
+    /**
+     * Attached content ids that are no longer in the active content list
+     * (e.g. deactivated/archived) — shown separately so view/edit still
+     * reflects them.
+     */
+    orphanContentRows() {
+      return this.contentQueue
+        .filter((id) => !this.sortedContent.some((c) => Number(c.id) === id))
+        .map((id) => {
+          const c = this.content.find((rec) => Number(rec.id) === id);
+          return { id, title: c?.title ?? `Content #${id}`, filename: c?.filename ?? "" };
+        });
+    },
+    /**
+     * The playlist whose content exactly matches the event's current content.
+     * Events created from a playlist were stored with that playlist's content
+     * ids, so this best-effort match usually pre-highlights the original one.
+     */
+    matchedPlaylistId() {
+      const current = this.currentContent;
+      if (!current) return null;
+      const match = this.playlists.find(
+        (p) => p.content && String(p.content).trim() === current
+      );
+      return match ? Number(match.id) : null;
+    },
+    sortedPlaylists() {
+      return [...this.playlists].sort((a, b) => {
+        if (a.name === b.name) return 0;
+        return a.name < b.name ? -1 : 1
+      })
+    },
   },
   watch: {
     'editEvent.companyWide': {
@@ -243,6 +337,7 @@ export default {
     },
     event(newEvent) {
       this.editEvent = this.formatForEdit(newEvent);
+      this.contentQueue = this.parseContentList(newEvent.content);
       this.editing = false;
     },
   },
@@ -257,6 +352,7 @@ export default {
     this.locations = (await this.$axios.get(this.$api + '?locations')).data;
     this.employees = (await this.$axios.get(this.$api + '?employees')).data;
     this.content = (await this.$axios.get(this.$api + '?content')).data;
+    this.playlists = (await this.$axios.get(this.$api + '?playlists')).data;
   },
 
   methods: {
@@ -281,10 +377,64 @@ export default {
         this.isMidnight(start) &&
         this.isMidnight(end);
     },
+    parseContentList(content) {
+      if (!content) return [];
+      return String(content)
+        .split(",")
+        .map((id) => Number(id.trim()))
+        .filter((id) => !Number.isNaN(id));
+    },
+    toggleContent(c) {
+      const id = Number(c.id);
+      const i = this.contentQueue.indexOf(id);
+      if (i > -1) this.contentQueue.splice(i, 1);
+      else this.contentQueue.push(id);
+    },
+    removeQueuedContent(id) {
+      this.contentQueue = this.contentQueue.filter((q) => q !== Number(id));
+    },
+    selectPlaylist(p) {
+      if (!this.editing || this.playlistDisabled(p)) return;
+      const id = Number(p.id);
+      if (this.matchedPlaylistId === id) {
+        // clicking the currently matched playlist removes its content
+        this.contentQueue = [];
+        return;
+      }
+      // replace this event's content with the playlist's content ids
+      this.contentQueue = this.parseContentList(p.content);
+    },
+    playlistDisabled(p) {
+      return this.playlistItemCount(p) === 0;
+    },
+    playlistItemCount(p) {
+      if (!p.content) return 0;
+      return String(p.content).split(",").filter((id) => String(id).trim() !== "").length;
+    },
+    playlistMeta(p) {
+      return this.playlistDisabled(p) ? "No content" : `${this.playlistItemCount(p)} content item(s)`;
+    },
+    playlistTitle(p) {
+      if (this.playlistDisabled(p)) return "This playlist has no content — add content to it first";
+      if (!this.editing) return "Click Edit to change this event's playlist";
+      return this.matchedPlaylistId === Number(p.id)
+        ? "Click to remove this playlist's content from the event"
+        : "Replace this event's content with this playlist";
+    },
+    contentButtonTitle(c) {
+      const id = Number(c.id);
+      return this.contentQueue.includes(id)
+        ? "Remove from event content"
+        : "Add to event content (can pick multiple)";
+    },
+    authorName(empNum) {
+      return this.employees.find((e) => e.number === empNum)?.name || "Unknown";
+    },
     resetChanges() {
       this.editing = false;
       this.confirmDelete = false;
       this.editEvent = this.formatForEdit(this.event);
+      this.contentQueue = this.parseContentList(this.event.content);
     },
     async saveChanges() {
       try {
@@ -301,8 +451,9 @@ export default {
         // Parse IDs
         if (this.editEvent.id) this.editEvent.id = parseInt(this.editEvent.id);
         if (this.editEvent.location_id) this.editEvent.location_id = parseInt(this.editEvent.location_id);
-        if (this.editEvent.content_id) this.editEvent.content_id = parseInt(this.editEvent.content_id);
         if (this.editEvent.employee_num) this.editEvent.employee_num = parseInt(this.editEvent.employee_num);
+        // persist the attached content as a comma-separated list (event.content column)
+        this.editEvent.content = this.currentContent;
         // Company wide?
         if (this.editEvent.companyWide) {
           this.editEvent.location_id = null;
@@ -318,6 +469,7 @@ export default {
         const toEdit = {
           ...this.editEvent
         }
+
         // if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(toEdit, null, 2))) return;
         await this.$axios.post(this.$api + "?events&update", toEdit);
         // log activity
@@ -389,4 +541,100 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.content-list {
+  flex: 1 1 auto;
+  min-height: 100px;
+  max-height: 30dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+}
+
+.content-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.35rem;
+  background-color: var(--bs-light);
+}
+
+.content-list-item.in-queue {
+  opacity: 0.55;
+}
+
+.item-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.item-info>span,
+.item-info>small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty-state {
+  padding: 1rem;
+  text-align: center;
+  color: var(--bs-secondary-color);
+}
+
+.playlist-list {
+  flex: 1 1 auto;
+  min-height: 100px;
+  max-height: 30dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+}
+
+.playlist-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.35rem;
+  background-color: var(--bs-light);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.playlist-list-item:hover {
+  border-color: var(--bs-primary);
+}
+
+.playlist-list-item.selected {
+  background-color: var(--bs-primary-bg-subtle);
+  border-color: var(--bs-primary);
+}
+
+.playlist-list-item.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  user-select: none;
+  -webkit-user-select: none;
+  background-color: var(--bs-secondary-bg);
+}
+
+.playlist-list-item.disabled:hover {
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+</style>
