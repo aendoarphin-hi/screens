@@ -3,17 +3,10 @@
   <div class="slideshow">
     <!-- crossfade between slides: the leaving slide fades out (animate__fadeOut)
          while the entering slide fades in (animate__fadeIn) -->
-    <transition
-      enter-active-class="animate__animated animate__fadeIn"
-      leave-active-class="animate__animated animate__fadeOut"
-    >
-      <img
-        v-if="slideCount > 0"
-        :key="currentIndex"
-        :src="displaySlides[currentIndex]"
-        class="slideshow-slide"
-        :alt="`Slide ${currentIndex + 1} of ${slideCount}`"
-      />
+    <transition enter-active-class="animate__animated animate__fadeIn"
+      leave-active-class="animate__animated animate__fadeOut">
+      <img v-if="slideCount > 0" :key="currentIndex" :src="displaySlides[currentIndex]" class="slideshow-slide"
+        :alt="`Slide ${currentIndex + 1} of ${slideCount}`" />
     </transition>
   </div>
 </template>
@@ -107,13 +100,24 @@ export default {
      */
     isVisibleNow(c) {
       const windows = this.events.filter(
-        (e) => Number(e.content_id) === Number(c.id) && e.start && e.end
+        (e) => this.eventIncludesContent(e, c.id) && e.start && e.end
       )
       if (windows.length === 0) return true
       const now = Date.now()
       return windows.some(
         (w) => now >= new Date(w.start).getTime() && now <= new Date(w.end).getTime()
       )
+    },
+    /**
+     * True when an event's comma-separated `content` list (the event.content
+     * db column) contains the given content id.
+     */
+    eventIncludesContent(e, contentId) {
+      if (!e || e.content === null || e.content === undefined || e.content === "") return false
+      return String(e.content)
+        .split(",")
+        .map((id) => Number(id.trim()))
+        .includes(Number(contentId))
     },
     /**
      * Loads (or refreshes) the screen, content, and events from the api.
