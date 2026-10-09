@@ -195,6 +195,20 @@ export function clearModalFocus(modalRef) {
   });
 }
 
-export function inSystemGroup() {
-  return Object.values(store.authenticated.groups).includes("HR Comms System");
+/**
+ * Checks if user is in a group
+ * @param {string} groupName - group name
+ * @returns {boolean} true if user is in group
+ */
+export function inGroup(groupName) {
+  return Object.values(store.authenticated.groups).includes(groupName);
+}
+
+/**
+ * Checks if current user is owner of the resource; resource author is identified by employee number
+ * @param {string} employeeNum - employee number
+ * @returns {boolean} true if user is owner
+ */
+export function isOwner(refEmpNum) {
+  return parseInt(refEmpNum) === parseInt(store.authenticated.user.number);
 }
