@@ -230,13 +230,10 @@ import Video from "vue-material-design-icons/Video.vue";
 import FilePdfBox from "vue-material-design-icons/FilePdfBox.vue";
 import FileDocument from "vue-material-design-icons/FileDocument.vue";
 import InformationOutline from "vue-material-design-icons/InformationOutline.vue";
-import { store } from "@/common/store";
-
-// static HR reviewer shown on processed items (demo only - no API integration)
-const REVIEWER = store.authenticated.name;
 
 export default {
   name: "ApprovalsView",
+  inject: ["store"],
   components: {
     HelpCircleOutline,
     Filter,
@@ -257,6 +254,7 @@ export default {
     InformationOutline,
   },
   data() {
+    const REVIEWER = this.store.authenticated.name;
     // entirely static demo data - mirrors uploaded content awaiting HR review
     const demoApprovals = [
       {
@@ -342,6 +340,7 @@ export default {
       statusFilter: "", // "", pending, approved, rejected
       demoApprovals,
       approvals: demoApprovals.map((a) => ({ ...a })), // working copy
+      reviewer: REVIEWER,
     };
   },
   computed: {
@@ -418,14 +417,14 @@ export default {
     approve(a) {
       if (a.status !== "pending") return;
       a.status = "approved";
-      a.reviewed_by = REVIEWER;
+      a.reviewed_by = this.reviewer;
       a.reviewed_at = new Date().toISOString();
       a.notes = "";
     },
     reject(a) {
       if (a.status !== "pending") return;
       a.status = "rejected";
-      a.reviewed_by = REVIEWER;
+      a.reviewed_by = this.reviewer;
       a.reviewed_at = new Date().toISOString();
       a.notes = a.notes || "Requested changes. Please revise and resubmit.";
     },

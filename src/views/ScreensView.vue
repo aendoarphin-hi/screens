@@ -66,7 +66,7 @@
           <UploadBox /> Upload Content
         </button>
         <RouterLink to="configuration">
-          <button v-if="inSystemGroup()" class="btn btn-sm btn-secondary">
+          <button v-if="inGroup('HR Comms System')" class="btn btn-sm btn-secondary">
             <Cog /> Configure Screens
           </button>
         </RouterLink>
@@ -77,9 +77,13 @@
       <!-- tabs -->
       <ul class="nav nav-tabs" id="screens-tab-list">
         <li v-for="endpoint in endpoints" :key="endpoint" class="nav-item">
-          <button class="nav-link text-capitalize" :class="activeTab === endpoint ? 'active' : ''"
-            @click="activeTab = endpoint; search = ''" :id="`${endpoint}-tab`" type="button">
-            {{ endpoint }}
+          <button 
+            :id="`${endpoint}-tab`"
+            type="button"
+            class="nav-link text-capitalize" 
+            :class="{ 'active': activeTab === endpoint, 'visually-hidden': inGroup('HR Comms Supervisors') && endpoint === 'screens' }"
+            @click="activeTab = endpoint; search = ''">
+            {{  ['playlists', 'content'].includes(endpoint) && inGroup('HR Comms Supervisors') ? 'My ' : '' }}{{ endpoint }}
           </button>
         </li>
       </ul>
@@ -96,7 +100,7 @@
           TAB VIEW - SCREENS
           ===================================================================================================================-->
 
-          <div class="tab-pane px-0 fade show" :class="activeTab === 'screens' ? 'show active' : ''" id="screens">
+          <div v-if="!inGroup('HR Comms Supervisors')" class="tab-pane px-0 fade show" :class="activeTab === 'screens' ? 'show active' : ''" id="screens">
             <!-- filters, sort, view toggle row -->
             <div class="tab-pane__toolbar">
               <!-- Filters -->
@@ -309,14 +313,14 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(p, i) in playlists" :key="p.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
+                  <tr v-for="(p) in playlists" :key="p.id">
                     <td class="fw-semibold"
                       style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap">
                       {{ p.name }}
                     </td>
                     <td>{{ p.description }}</td>
                     <td class="text-end">
-                      <div class="d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
+                      <div class="d-flex gap-3 justify-content-end">
                         <button @click="openEditPlaylistModal(p)"
                           class="btn btn-sm btn-outline-secondary cursor-pointer">
                           <Pencil /> Edit
@@ -335,7 +339,7 @@
             <div v-else-if="viewMode === 'grid'"
               class="tab-pane__gridview"
               style="max-height: 70dvh">
-              <div v-for="(p, i) in playlists" :key="p.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
+              <div v-for="(p) in playlists" :key="p.id"
                 class="card border col-12 col-md-5 col-lg-3 col-xl-2">
                 <div class="card-body d-flex flex-column gap-2">
                   <span class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
@@ -348,7 +352,7 @@
                     {{ p.description }}
                   </span>
                   <span @click="openEditPlaylistModal(p)" class="cursor-pointer mt-auto btn btn-sm btn-primary"
-                    :class="{ 'opacity-0': hoverIndex !== i }" style="font-size: 10px;">Edit</span>
+                    style="font-size: 10px;">Edit</span>
                 </div>
               </div>
               <div v-if="playlists.length === 0" class="empty-state">
@@ -571,7 +575,7 @@ import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue";
 import Cog from "vue-material-design-icons/Cog.vue";
 import Account from "vue-material-design-icons/Account.vue";
 
-import { filterByField, inSystemGroup, searchByText, sortByField } from "@/common/helpers";
+import { filterByField, inGroup, searchByText, sortByField } from "@/common/helpers";
 import UploadContentModalComponent from "@/components/modals/UploadContentModalComponent.vue";
 import EditContentModalComponent from "@/components/modals/EditContentModalComponent.vue";
 import { nextTick } from "vue";
@@ -650,7 +654,7 @@ export default {
       },
       hoverIndex: -1, // for hover effect on tab actions
       viewMode: "grid", // grid or list
-      activeTab: "screens", // active tab
+      activeTab: inGroup("HR Comms Supervisors") ? "playlists" : "screens", // active tab
       screenToEdit: null, // obj to pass to modal for editing
       playlistToEdit: null, // obj to pass to modal for editing
       contentToEdit: null, // obj to pass to modal for editing
@@ -680,6 +684,8 @@ export default {
 
     playlists() {
       let result = [...this.rawPlaylists];
+      // filter out first if user has limited privileges
+      inGroup("HR Comms Supervisors") && (result = result.filter((p) => p.created_by === this.store.authenticated.number));
       if (this.search.trim().length > 0) {
         result = searchByText(result, this.search);
       }
@@ -742,7 +748,7 @@ export default {
         this.activeTab = "content";
       })
     },
-    inSystemGroup,
+    inGroup,
     clearFilters() {
       this.filters = {
         screens: {
@@ -906,7 +912,6 @@ export default {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 1rem;
 }
 
 .tab-pane__gridview {
@@ -918,7 +923,6 @@ export default {
   overflow: hidden;
   overflow-y: auto;
   border-bottom: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
-  border-top: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
   padding: 1rem 0;
 }
 

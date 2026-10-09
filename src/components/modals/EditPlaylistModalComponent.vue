@@ -1,7 +1,7 @@
 <template>
   <!-- modal -->
   <div class="modal px-3 fade" id="edit-playlist-modal" ref="editPlaylistModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 1000px;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: max-content;">
       <div class="modal-content shadow">
 
         <div class="modal-header">
@@ -20,7 +20,7 @@
             </div>
           </transition>
 
-          <div class="d-flex flex-row">
+          <div class="d-flex flex-row border-bottom pb-3">
             <!-- playlist info -->
             <div class="pe-3" style="flex: 1 1 0; min-width: 0;">
               <div class="vstack gap-2">
@@ -28,11 +28,9 @@
                 <input v-model="form.name" type="text" class="form-control form-control-sm" placeholder="Playlist Name">
 
                 <label class="small fw-semibold">Description</label>
-                <textarea v-model="form.description" class="form-control form-control-sm" rows="3"
+                <textarea v-model="form.description" style="max-height: 206px; min-height: 206px;" class="form-control form-control-sm" rows="3"
                   placeholder="Playlist description"></textarea>
 
-                <label class="small fw-semibold mb-0">Created By</label>
-                <small>{{ createdByName }}</small>
               </div>
             </div>
 
@@ -40,7 +38,7 @@
             <div class="border-start px-3 d-flex flex-column gap-2" style="flex: 1 1 0; min-width: 0;">
               <label class="small fw-semibold">
                 Play Sequence
-                <span v-if="contentQueue.length > 0" class="text-muted">({{ contentQueue.length }})</span>
+                <span v-if="contentQueue.length > 0" class="badge rounded-pill text-bg-secondary">{{ contentQueue.length }}</span>
               </label>
               <!-- play sequence list -->
               <div class="content-queue small" @dragover.prevent="onContainerDragOver" @drop.prevent="onContainerDrop">
@@ -528,7 +526,7 @@ export default {
   gap: 0.5rem;
   padding: 0.75rem;
   border: 1px solid var(--bs-border-color);
-  border-radius: 0.5rem;
+  border-radius: var(--bs-border-radius);
 }
 
 .content-list-item {
@@ -537,7 +535,7 @@ export default {
   gap: 0.5rem;
   padding: 0.35rem 0.5rem;
   border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 0.35rem;
+  border-radius: var(--bs-border-radius-sm);
   background-color: var(--bs-light);
 }
 

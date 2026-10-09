@@ -22,11 +22,11 @@
       </div>
       <!-- toolbar -->
       <div class="route-view__toolbar">
-        <button class="btn btn-sm btn-success" @click="openCreateModal">+ Create Announcement</button>
+        <button v-if="!inGroup('HR Comms Supervisors')" class="btn btn-sm btn-success" @click="openCreateModal">+ Create Announcement</button>
         <button class="btn btn-sm btn-primary" @click="openUploadModal">
           <UploadBox /> Upload Content
         </button>
-        <button class="btn btn-sm btn-danger" @click="open">
+        <button v-if="!inGroup('HR Comms Supervisors')" class="btn btn-sm btn-danger" @click="open">
           <ExclamationThick /> Issue Emergency Alert
         </button> <!-- not same as events; do something that is immediate -->
       </div>
@@ -37,7 +37,7 @@
       <RouterLink v-for="s in quickStats" :key="s.title"
         :to="s.title === 'approvals' ? 'approvals' : { name: 'Screens', query: { tab: s.title } }"
         class="col-12 col-md-6 col-lg-3 text-decoration-none">
-        <div class="card shadow-sm border border-0 hstack h-100">
+        <div class="card kpi-card">
           <div class="card-body hstack align-items-start">
             <div class="col cursor-pointer">
               <div class="text-muted text-uppercase hstack text-fluid">
@@ -81,7 +81,7 @@
               </span>
               Upcoming Announcements
             </h6>
-            <router-link :to="{ name: 'Calendar', query: { type: 'announcement' } }"
+            <router-link :hidden="inGroup('HR Comms Supervisors')" :to="{ name: 'Calendar', query: { type: 'announcement' } }"
               class="small link-primary text-decoration-none">More&nbsp;▸</router-link>
           </div>
           <ul v-if="upcomingAnnouncements.length" class="list-group list-group-flush">
@@ -158,7 +158,7 @@
               </span>
               People
             </h6>
-            <router-link to="/calendar" class="small link-primary text-decoration-none">More
+            <router-link :hidden="inGroup('HR Comms Supervisors')" to="/calendar" class="small link-primary text-decoration-none">More
               &nbsp;▸</router-link>
           </div>
           <ul v-if="employeeEvents.length" class="list-group list-group-flush"
@@ -190,7 +190,7 @@
               <span class="mb-1">
                 <ClockOutline class="fs-5" />
               </span>
-              Recent Activity
+              {{ inGroup("HR Comms Supervisors") ? "My" : "Recent" }} Activity
             </h6>
           </div>
           <div class="timeline">
@@ -246,10 +246,11 @@ import CreateEventModalComponent from "@/components/modals/CreateEventModalCompo
 import UploadContentModalComponent from "@/components/modals/UploadContentModalComponent.vue";
 
 import { markRaw } from "vue";
-import { formatTimeAgo } from "@/common/helpers";
+import { formatTimeAgo, inGroup } from "@/common/helpers";
 
 export default {
   name: "DashboardView",
+  inject: ["store"],
   components: {
     Magnify,
     MapMarker,
@@ -287,6 +288,7 @@ export default {
     };
   },
   methods: {
+    inGroup,
     openCreateModal() {
       this.$modal.show('create-event-modal');
     },
@@ -383,17 +385,23 @@ export default {
   computed: {
     recentUploads() {
       return [...this.content]
-        .sort((a, b) => new Date(b.created) - new Date(a.created))
-        .slice(0, 5);
+        .sort((a, b) => new Date(b.created) - new Date(a.created));
     },
     recentActivity() {
-      return this.activity.map((a) => {
+      let result = [];
+      const activities = this.activity.map((a) => {
         const employee = this.employees.find((e) => parseInt(e.number) === parseInt(a.enum));
         return {
           ...a,
           name: employee ? employee.name : "Unknown",
         };
-      }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
+      }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      if (inGroup("HR Comms Supervisors")) { // only show your own activity
+        result = activities.filter((a) => a.enum === this.store.authenticated.number).slice(0, 5);
+      } else {
+        result = activities.slice(0, 5);
+      }
+      return result.length > 5 ? result.slice(0, 5) : result;
     },
     employeeEvents() { // sort by event end date where the upcoming one is first, dont include past events
       return this.events.filter((event) => event.type === "employee" && new Date(event.end) >= new Date())
@@ -408,6 +416,7 @@ export default {
   },
   async mounted() {
     try {
+      console.log(this.store.authenticated.number);
       this.loading = true;
 
       const states = [
@@ -496,6 +505,17 @@ export default {
 
 .list-group-item:nth-child(odd) {
   background: white;
+}
+
+/* kpi card */
+.kpi-card:hover {
+  translate: 0 -2px;
+  scale: 1.005;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+}
+.kpi-card:not(:hover) {
+  transition: all 0.2s ease-in-out;
 }
 
 /* kpi stat icon */

@@ -13,9 +13,10 @@ import Television from "vue-material-design-icons/Television.vue";
 import CalendarMonth from "vue-material-design-icons/CalendarMonth.vue";
 import AccountClock from "vue-material-design-icons/AccountClock.vue";
 import AccountCircle from "vue-material-design-icons/AccountCircle.vue";
-import { inSystemGroup } from "@/common/helpers";
+import { inGroup } from "@/common/helpers";
 
-const publicPages = ["Auth", "Unauthorized"];
+const publicPages = ["Auth", "Unauthorized", "Slideshow"];
+const privatePages = ["Configuration", "Calendar", "Approvals", "Profile"];
 
 const routes = [
   {
@@ -25,7 +26,7 @@ const routes = [
   },
   {
     path: "/dashboard",
-    name: "Dashboard" || "", // using for tab name
+    name: "Dashboard" || "", // use name or path to idenfity routes
     component: DashboardView,
     active: true, // set false to hide from sidebar
     icon: markRaw(ViewDashboard),
@@ -60,7 +61,7 @@ const routes = [
   },
   {
     path: "/configuration",
-    name: "Screen Configuration",
+    name: "Configuration",
     component: () => import("@/views/ConfigureView.vue"),
     active: false,
   },
@@ -106,7 +107,7 @@ router.beforeEach(async (to) => {
     store.authenticated = authRes.data;
 
     // restrict configuration page if not in system group
-    if (to.name === "Screen Configuration" && !inSystemGroup()) {
+    if (privatePages.includes(to.name) && !inGroup("HR Comms System")) {
       return { name: "Unauthorized" };
     }
   } catch (error) {

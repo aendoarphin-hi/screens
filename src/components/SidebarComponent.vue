@@ -1,6 +1,6 @@
 <template>
-  <aside id="sidebar" :class="{ 'collapsed': !isOpen }">
-    <router-link id="sidebar-header" to="/dashboard" class="d-flex align-items-center text-decoration-none mx-auto">
+  <aside v-if="store.authenticated" id="sidebar" :class="{ 'collapsed': !isOpen }">
+    <router-link id="sidebar-header" to="/dashboard">
       <img src="@/assets/img/hayden-blue.svg" alt="Hayden Logo" class="me-2" />
       <span class="fs-4 text-dark text-nowrap"><strong>HAYDEN</strong> <span class="text-primary">{{ $appname }}</span></span>
     </router-link>
@@ -8,7 +8,7 @@
     <hr />
     <ul class="nav nav-pills d-flex flex-column mb-auto gap-1">
       <li v-for="route in routes" :key="route.name" class="nav-item">
-        <router-link :to="{ name: route.name }" class="nav-link text-capitalize hstack align-items-center"
+        <router-link :to="{ name: route.name }" class="nav-link"
           active-class="active">
           <span>
             <component :is="route.icon" />
@@ -16,7 +16,7 @@
         </router-link>
       </li>
       <li class="nav-item">
-        <a :href="$webroot" class="nav-link text-capitalize hstack align-items-center">
+        <a :href="$webroot" class="nav-link">
           <span>
             <Logout />
           </span>&nbsp;&nbsp;<span>Exit</span>
@@ -25,17 +25,14 @@
     </ul>
     <hr />
     <div id="sidebar-footer" class="d-flex flex-nowrap">
-      <router-link v-if="user" to="/profile" class="text-decoration-none">
-        <small class="bg-primary fw-semibold p-1 rounded-circle text-white w-50">
+      <router-link to="/profile" class="text-decoration-none">
+        <small v-if="user" class="bg-primary fw-semibold p-1 rounded-circle text-white w-50">
           {{ user.name.split(" ")[0][0] + user.name.split(" ")[1][0] }}
         </small>&nbsp;&nbsp;<span class="text-nowrap">{{ user.name }}</span>
       </router-link>
-      <a v-else :href="$webroot" class="text-decoration-none">
-        <AccountCircle />&nbsp;&nbsp;<span>Sign In</span>
-      </a>
     </div>
   </aside>
-  <div @click="isOpen = !isOpen" class="cursor-pointer"
+  <div v-if="store.authenticated" @click="isOpen = !isOpen" class="cursor-pointer"
     style="height: 100dvh; align-items: center; display: flex; border-right: 1px solid var(--bs-border-color); position: sticky; top: 0;">
     <ChevronLeft v-if="isOpen" />
     <ChevronRight v-else />
@@ -97,6 +94,13 @@ export default {
   transition: width 250ms ease, min-width 250ms ease, opacity 100ms ease, padding 250ms ease;
 }
 
+#sidebar-header {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  margin: 0 auto;
+}
+
 #sidebar.collapsed {
   width: 0;
   min-width: 0;
@@ -111,6 +115,14 @@ export default {
   gap: 0.5rem;
   align-items: center;
   justify-content: space-between;
+}
+
+.nav-link {
+  text-transform: capitalize;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-self: stretch;
 }
 
 .nav-link:not(.active):hover {

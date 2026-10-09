@@ -618,7 +618,7 @@ export default {
   gap: 0.5rem;
   padding: 0.75rem;
   border: 1px solid var(--bs-border-color);
-  border-radius: 0.5rem;
+  border-radius: var(--bs-border-radius);
 }
 
 .content-list-item {
@@ -627,7 +627,7 @@ export default {
   gap: 0.5rem;
   padding: 0.35rem 0.5rem;
   border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 0.35rem;
+  border-radius: var(--bs-border-radius-sm);
   background-color: var(--bs-light);
 }
 

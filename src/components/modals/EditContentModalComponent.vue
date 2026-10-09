@@ -74,7 +74,7 @@
         </div>
 
         <div class="modal-footer p-2">
-          <button :disabled="!allowed" @click="deleteContent" type="button" class="me-auto btn btn-sm btn-danger me-2"
+          <button :disabled="inGroup('HR Comms Supervisors')" @click="deleteContent" type="button" class="me-auto btn btn-sm btn-danger me-2"
             data-bs-dismiss="modal">
             Delete
           </button>
@@ -95,7 +95,7 @@
 </template>
 
 <script>
-import { clearModalFocus } from "@/common/helpers";
+import { clearModalFocus, inGroup } from "@/common/helpers";
 
 export default {
   name: "EditContentModalComponent",
@@ -148,11 +148,7 @@ export default {
     clearModalFocus(this.$refs.editContentModal);
   },
   methods: {
-    allowed() {
-      // return false if in HR Comms Supervisors
-      if (!Object.values(this.store.authenticated.groups).includes('HR Comms Supervisors')) return true;
-      return false;
-    },
+    inGroup,
     resetChanges() {
       const c = this.content ?? {};
       this.form = {

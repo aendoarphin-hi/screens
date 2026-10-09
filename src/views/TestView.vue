@@ -1,6 +1,6 @@
 <template>
   <div>
-    {{ store.authenticated.number }}
+    {{ JSON.stringify(store.authenticated) }}
   </div>
 </template>
 <script>
