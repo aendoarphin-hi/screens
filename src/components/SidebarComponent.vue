@@ -7,7 +7,7 @@
     <span class="w-100 text-center text-muted" style="font-size: 10px;">v{{ $version }}</span>
     <hr />
     <ul class="nav nav-pills d-flex flex-column mb-auto gap-1">
-      <li v-for="route in routes" :key="route.name" class="nav-item">
+      <li v-for="route in routes" :hidden="inGroup('HR Comms Supervisors') && ['Calendar', 'Approvals'].includes(route.name)" :key="route.name" class="nav-item">
         <router-link :to="{ name: route.name }" class="nav-link"
           active-class="active">
           <span>
@@ -44,6 +44,7 @@ import AccountCircle from "vue-material-design-icons/AccountCircle.vue";
 import ChevronRight from "vue-material-design-icons/ChevronRight.vue";
 import ChevronLeft from "vue-material-design-icons/ChevronLeft.vue";
 import Logout from "vue-material-design-icons/Logout.vue";
+import { inGroup } from "@/common/helpers";
 
 export default {
   name: "Sidebar",
@@ -66,6 +67,10 @@ export default {
     this.routes = this.$router.options.routes.filter(
       (route) => route.name && route.active
     );
+  },
+
+  methods: {
+    inGroup
   },
 
   computed: {

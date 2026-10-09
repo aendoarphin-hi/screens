@@ -70,7 +70,7 @@
     </div>
     <!--  modals  -->
     <EditEventModalComponent :event="selectedEvent" @edited="refreshCalendar" @deleted="refreshCalendar" />
-    <CreateEventModalComponent :range="selectedDateRange" @created="refreshCalendar" />
+    <AddEventModalComponent :range="selectedDateRange" @created="refreshCalendar" />
     <!-- pop over create button on date drag -->
     <div :hidden="!showPopover" @click="openCreateEvent" class="btn btn-sm btn-success small text-nowrap"
       id="create-event-popover"
@@ -97,7 +97,7 @@ import '@fullcalendar/vue3/skeleton.css'
 import '@fullcalendar/vue3/themes/breezy/theme.css'
 import '@/assets/styles/hayden.css'
 import EditEventModalComponent from '@/components/modals/EditEventModalComponent.vue'
-import CreateEventModalComponent from '@/components/modals/CreateEventModalComponent.vue'
+import AddEventModalComponent from '@/components/modals/AddEventModalComponent.vue'
 import { nextTick } from 'vue'
 import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
 import Filter from "vue-material-design-icons/Filter.vue"
@@ -110,7 +110,7 @@ export default {
   components: {
     FullCalendar,
     EditEventModalComponent,
-    CreateEventModalComponent,
+    AddEventModalComponent,
 
     HelpCircleOutline,
     Filter,

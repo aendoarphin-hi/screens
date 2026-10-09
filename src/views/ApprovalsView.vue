@@ -123,7 +123,7 @@
           </span>
           Approval Queue
         </h6>
-        <router-link :to="{ name: 'Screens', query: { tab: 'content' } }"
+        <router-link :to="{ name: 'Manage', query: { tab: 'content' } }"
           class="small link-primary text-decoration-none">View content library&nbsp;&#9656;</router-link>
       </div>
 

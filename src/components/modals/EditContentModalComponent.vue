@@ -7,7 +7,7 @@
         <div class="modal-header">
           <div class="d-flex align-items-center w-100">
             <strong class="text-nowrap overflow-hidden me-4" style="text-overflow: ellipsis">
-              Edit Content
+              {{ inGroup('HR Comms Supervisors') ? 'Properties' : 'Edit Content' }}
             </strong>
           </div>
         </div>
@@ -60,34 +60,39 @@
             </div>
           </div>
 
-          <hr class="my-3" />
+          <template v-if="!inGroup('HR Comms Supervisors')">
+            <hr class="my-3" />
 
-          <div class="d-flex flex-column">
-            <!-- editable: status -->
-            <label for="edit-content-status" class="small fw-semibold mb-1">Status</label>
-            <select id="edit-content-status" v-model="form.status"
-              class="col form-select form-select-sm text-capitalize">
-              <option v-for="s in statusOptions" :key="s" :value="s">{{ s }}</option>
-            </select>
-          </div>
+            <div class="d-flex flex-column">
+              <!-- editable: status -->
+              <label for="edit-content-status" class="small fw-semibold mb-1">Status</label>
+              <select id="edit-content-status" v-model="form.status"
+                class="col form-select form-select-sm text-capitalize">
+                <option v-for="s in statusOptions" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+          </template>
 
         </div>
 
         <div class="modal-footer p-2">
-          <button :disabled="inGroup('HR Comms Supervisors')" @click="deleteContent" type="button" class="me-auto btn btn-sm btn-danger me-2"
-            data-bs-dismiss="modal">
-            Delete
-          </button>
+          <template v-if="inGroup('HR Comms HR') || inGroup('HR Comms System')">
+            <button :disabled="!inGroup('HR Comms HR' || 'HR Comms System')" @click="deleteContent" type="button" class="me-auto btn btn-sm btn-danger me-2"
+              data-bs-dismiss="modal">
+              Delete
+            </button>
 
-          <button type="reset" class="btn btn-sm btn-secondary me-2" data-bs-dismiss="modal" title="Cancel">
-            Cancel
-          </button>
+            <button type="reset" class="btn btn-sm btn-secondary me-2" data-bs-dismiss="modal" title="Cancel">
+              Cancel
+            </button>
 
-          <button :disabled="saving || !hasChanges" @click="saveChanges" type="submit" class="btn btn-sm btn-success"
-            title="Save Status">
-            <span v-if="saving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-            {{ saving ? 'Saving...' : 'Save Changes' }}
-          </button>
+            <button :disabled="saving || !hasChanges" @click="saveChanges" type="submit" class="btn btn-sm btn-success"
+              title="Save Status">
+              <span v-if="saving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              {{ saving ? 'Saving...' : 'Save Changes' }}
+            </button>
+          </template>
+          <span v-else class="text-muted">&nbsp;</span>
         </div>
       </div>
     </div>
@@ -95,7 +100,7 @@
 </template>
 
 <script>
-import { clearModalFocus, inGroup } from "@/common/helpers";
+import { clearModalFocus, inGroup, isOwner } from "@/common/helpers";
 
 export default {
   name: "EditContentModalComponent",

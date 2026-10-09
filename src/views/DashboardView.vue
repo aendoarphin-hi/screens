@@ -35,7 +35,7 @@
     <!--  KPI stat cards  -->
     <div class="row g-3 mb-4">
       <RouterLink v-for="s in quickStats" :key="s.title"
-        :to="s.title === 'approvals' ? 'approvals' : { name: 'Screens', query: { tab: s.title } }"
+        :to="getRoute(s.title)"
         class="col-12 col-md-6 col-lg-3 text-decoration-none">
         <div class="card kpi-card">
           <div class="card-body hstack align-items-start">
@@ -117,7 +117,7 @@
               </span>
               Recent Uploads
             </h6>
-            <router-link :to="{ name: 'Screens', query: { tab: 'content' } }"
+            <router-link :to="{ name: 'Manage', query: { tab: 'content' } }"
               class="small link-primary text-decoration-none">More
               &nbsp;▸</router-link>
           </div>
@@ -217,7 +217,7 @@
         </div>
       </div>
     </div>
-    <CreateEventModalComponent />
+    <AddEventModalComponent />
     <UploadContentModalComponent />
   </div>
   <div v-else class="d-flex justify-content-center align-items-center">
@@ -242,7 +242,7 @@ import FileDocument from "vue-material-design-icons/FileDocument.vue";
 import Calendar from "vue-material-design-icons/Calendar.vue";
 import ExclamationThick from "vue-material-design-icons/ExclamationThick.vue";
 
-import CreateEventModalComponent from "@/components/modals/CreateEventModalComponent.vue";
+import AddEventModalComponent from "@/components/modals/AddEventModalComponent.vue";
 import UploadContentModalComponent from "@/components/modals/UploadContentModalComponent.vue";
 
 import { markRaw } from "vue";
@@ -268,7 +268,7 @@ export default {
     Calendar,
     ExclamationThick,
 
-    CreateEventModalComponent,
+    AddEventModalComponent,
     UploadContentModalComponent,
   },
 
@@ -381,6 +381,11 @@ export default {
         .sort((a, b) => new Date(a.start) - new Date(b.start))
         .filter((event) => new Date(event.start) >= new Date());
     },
+    getRoute(title) {
+      // if user is supervisor and clicked on screens or approvals, redirect to current route otherwise redirect to clicked kpi
+      return inGroup("HR Comms Supervisors") && (title === 'screens' || title === 'approvals') ? { name: 'Dashboard' } : { name: 'Manage', query: { tab: title } }
+      // return title === 'approvals' ? 'approvals' : { name: 'Manage', query: { tab: title } }
+    }
   },
   computed: {
     recentUploads() {

@@ -196,7 +196,7 @@ export function clearModalFocus(modalRef) {
 }
 
 /**
- * Checks if user is in a group
+ * Checks if logged in user is in a group
  * @param {string} groupName - group name
  * @returns {boolean} true if user is in group
  */

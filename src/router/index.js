@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import { markRaw, nextTick } from "vue";
 import { config } from "@/common/config.js";
 import { store } from "@/common/store.js";
+import { inGroup } from "@/common/helpers";
 import axios from "axios";
 
 // views
@@ -13,10 +14,10 @@ import Television from "vue-material-design-icons/Television.vue";
 import CalendarMonth from "vue-material-design-icons/CalendarMonth.vue";
 import AccountClock from "vue-material-design-icons/AccountClock.vue";
 import AccountCircle from "vue-material-design-icons/AccountCircle.vue";
-import { inGroup } from "@/common/helpers";
+import Cog from "vue-material-design-icons/Cog.vue";
 
 const publicPages = ["Auth", "Unauthorized", "Slideshow"];
-const privatePages = ["Configuration", "Calendar", "Approvals", "Profile"];
+const privatePages = ["Configuration", "Calendar", "Approvals"];
 
 const routes = [
   {
@@ -32,9 +33,9 @@ const routes = [
     icon: markRaw(ViewDashboard),
   },
   {
-    path: "/screens",
-    name: "Screens",
-    component: () => import("@/views/ScreensView.vue"),
+    path: "/manage",
+    name: "Manage",
+    component: () => import("@/views/ManageView.vue"),
     active: true,
     icon: markRaw(Television),
   },
@@ -64,6 +65,7 @@ const routes = [
     name: "Configuration",
     component: () => import("@/views/ConfigureView.vue"),
     active: false,
+    icon: markRaw(Cog),
   },
   {
     path: "/auth",
@@ -103,6 +105,7 @@ const router = createRouter({
 // do stuff before route change
 router.beforeEach(async (to) => {
   try {
+    // check logged in status and update store
     const authRes = await axios.get(config.api + "?auth");
     store.authenticated = authRes.data;
 
@@ -111,6 +114,7 @@ router.beforeEach(async (to) => {
       return { name: "Unauthorized" };
     }
   } catch (error) {
+    // redirect to login form
     store.authenticated = false;
     if (!publicPages.includes(to.name)) {
       return { name: "Auth" };

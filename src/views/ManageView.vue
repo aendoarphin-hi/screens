@@ -83,7 +83,7 @@
             class="nav-link text-capitalize" 
             :class="{ 'active': activeTab === endpoint, 'visually-hidden': inGroup('HR Comms Supervisors') && endpoint === 'screens' }"
             @click="activeTab = endpoint; search = ''">
-            {{  ['playlists', 'content'].includes(endpoint) && inGroup('HR Comms Supervisors') ? 'My ' : '' }}{{ endpoint }}
+            {{ endpoint }}
           </button>
         </li>
       </ul>
@@ -164,7 +164,7 @@
               </button>
             </div>
             <!-- search bar 2 -->
-            <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search"
+            <input type="search" class="mt-2 mt-xl-0 form-control form-control-sm mb-2 d-block d-xl-none" placeholder="Search"
               v-model="search" />
             <!-- list view -->
             <div v-if="viewMode === 'list'" class="table-responsive">
@@ -209,7 +209,7 @@
                   </tr>
                 </tbody>
               </table>
-              <div v-if="screens.length === 0" class="emtpy-state">
+              <div v-if="screens.length === 0" class="empty-state">
                 <span class="text-muted">No screens found.</span>
               </div>
             </div>
@@ -294,7 +294,7 @@
               </button>
             </div>
             <!-- search bar 2 -->
-            <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search"
+            <input type="search" class="mt-2 mt-xl-0 form-control form-control-sm mb-2 d-block d-xl-none" placeholder="Search"
               v-model="search" />
             <!-- list view -->
             <div v-if="viewMode === 'list'" class="table-responsive">
@@ -341,6 +341,10 @@
               style="max-height: 70dvh">
               <div v-for="(p) in playlists" :key="p.id"
                 class="card border col-12 col-md-5 col-lg-3 col-xl-2">
+                <span class="approval-state">
+                  <ClockOutline class="text-warning-emphasis" title="Pending" />
+                  <CloseCircle class="text-danger" title="Rejected" />
+                </span> 
                 <div class="card-body d-flex flex-column gap-2">
                   <span class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                     <PlaylistPlay /> {{ p.name }}
@@ -428,7 +432,7 @@
               </button>
             </div>
             <!-- search bar 2 -->
-            <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search"
+            <input type="search" class="mt-2 mt-xl-0 form-control form-control-sm mb-2 d-block d-xl-none" placeholder="Search"
               v-model="search" />
 
             <!-- list view -->
@@ -448,7 +452,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(c, i) in content" :key="c.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
+                  <tr v-for="c in content" :key="c.id">
                     <td>
                       <span class="badge" :class="contentTypeBadgeClass(c.type)">{{ c.type }}</span>
                     </td>
@@ -467,8 +471,7 @@
                       <span class="text-muted">{{ empName(c.uploaded_by) }}</span>
                     </td>
                     <td class="text-end">
-                      <div class="text-nowrap d-flex gap-3 justify-content-end"
-                        :class="{ invisible: hoverIndex !== i }">
+                      <div class="text-nowrap d-flex gap-3 justify-content-end">
                         <button class="btn btn-sm btn-outline-secondary cursor-pointer"
                           @click="openEditContentModal(c)">
                           <Pencil /> Edit
@@ -501,7 +504,8 @@
                   <span v-if="hoverIndex === i"
                     class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
                     style="background-color: rgba(0, 0, 0, 0.2);">
-                    <Pencil class="text-white cursor-pointer fs-3" @click="openEditContentModal(c)" />
+                    <Pencil v-if="!inGroup('HR Comms Supervisors')" class="text-white cursor-pointer fs-3" @click="openEditContentModal(c)" />
+                    <InformationOutline v-else class="text-white cursor-pointer fs-3" @click="openEditContentModal(c)" />
                   </span>
                 </span>
 
@@ -574,6 +578,9 @@ import Television from "vue-material-design-icons/Television.vue";
 import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue";
 import Cog from "vue-material-design-icons/Cog.vue";
 import Account from "vue-material-design-icons/Account.vue";
+import CloseCircle from "vue-material-design-icons/CloseCircle.vue";
+import ClockOutline from "vue-material-design-icons/ClockOutline.vue";
+import InformationOutline from "vue-material-design-icons/InformationOutline.vue";
 
 import { filterByField, inGroup, searchByText, sortByField } from "@/common/helpers";
 import UploadContentModalComponent from "@/components/modals/UploadContentModalComponent.vue";
@@ -584,7 +591,7 @@ import AddPlaylistModalComponent from "@/components/modals/AddPlaylistModalCompo
 import EditPlaylistModalComponent from "@/components/modals/EditPlaylistModalComponent.vue";
 
 export default {
-  name: "ScreenView",
+  name: "ManageView",
   components: {
     Filter,
     Sort,
@@ -608,6 +615,9 @@ export default {
     FilterOffOutline,
     Cog,
     Account,
+    CloseCircle,
+    ClockOutline,
+    InformationOutline,
 
     UploadContentModalComponent,
     EditScreenModalComponent,
@@ -684,7 +694,7 @@ export default {
 
     playlists() {
       let result = [...this.rawPlaylists];
-      // filter out first if user has limited privileges
+      // include only user's own playlists if user has limited privileges
       inGroup("HR Comms Supervisors") && (result = result.filter((p) => p.created_by === this.store.authenticated.number));
       if (this.search.trim().length > 0) {
         result = searchByText(result, this.search);
@@ -694,6 +704,8 @@ export default {
 
     content() {
       let result = [...this.rawContent];
+      // include only user's own content if user has limited privileges
+      inGroup("HR Comms Supervisors") && (result = result.filter((c) => c.uploaded_by === this.store.authenticated.number));
       result = filterByField(result, "type", this.filters.content.type);
       result = filterByField(result, "status", this.filters.content.status);
       if (this.search.trim().length > 0) {
@@ -899,6 +911,22 @@ export default {
 </script>
 
 <style scoped>
+.approval-state {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: clamp(0.9rem, 0.8vw, 1rem);
+  cursor: help;
+}
+
+.empty-state {
+  padding: 1rem;
+  text-align: center;
+  font-size: clamp(0.8rem, 0.8vw, 1rem);
+  opacity: 0.55;
+  width: 100%;
+}
+
 .nav-item.active {
   background-color: var(--bs-primary);
 }
@@ -931,6 +959,7 @@ export default {
 }
 
 .table-responsive {
+  margin-top: 1rem;
   max-height: 70dvh;
   overflow-y: auto;
   border-top: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color)
