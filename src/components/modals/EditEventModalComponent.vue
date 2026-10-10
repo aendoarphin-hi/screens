@@ -141,7 +141,7 @@
                   <small v-if="c.uploaded_by" class="text-muted">Uploaded by {{ authorName(c.uploaded_by) }}</small>
                 </div>
                 <button type="button" class="btn btn-sm border-0 p-0 shadow-none" :disabled="!editing"
-                  :title="contentButtonTitle(c)" @click="toggleContent(c)">
+                  v-tooltip="contentButtonTitle(c)" @click="toggleContent(c)">
                   <Plus v-if="!contentQueue.includes(parseInt(c.id))" class="text-success" />
                   <Check v-else class="text-success" />
                 </button>

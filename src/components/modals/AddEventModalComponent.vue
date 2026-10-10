@@ -116,7 +116,7 @@
                 <div class="playlist-list small">
                   <div v-for="p in sortedPlaylists" :key="p.id" class="playlist-list-item"
                     :class="{ selected: selectedPlaylistId === parseInt(p.id), disabled: playlistDisabled(p) }"
-                    role="button" tabindex="0" :aria-disabled="playlistDisabled(p)" :title="playlistTitle(p)"
+                    role="button" tabindex="0" :aria-disabled="playlistDisabled(p)" v-tooltip="playlistTitle(p)"
                     @click="selectPlaylist(p)" @keydown.enter="selectPlaylist(p)">
                     <Check v-if="selectedPlaylistId === parseInt(p.id)" class="text-success" />
                     <BlockHelper v-else-if="playlistDisabled(p)" class="text-muted" />
@@ -140,13 +140,14 @@
                 </label>
                 <div class="content-list small">
                   <div v-for="c in sortedContent" :key="c.id" class="content-list-item"
+                    @click="toggleContent(c)" v-tooltip="contentButtonTitle(c)"
                     :class="{ 'in-queue': contentQueue.includes(parseInt(c.id)) }">
                     <div class="item-info">
                       <span class="fw-semibold">{{ c.title }}</span>
                       <small v-if="c.uploaded_by" class="text-muted">Uploaded by {{ authorName(c.uploaded_by) }}</small>
                     </div>
                     <button type="button" class="btn btn-sm border-0 p-0 shadow-none"
-                      :disabled="selectedPlaylistId !== null" :title="contentButtonTitle(c)" @click="toggleContent(c)">
+                      :disabled="selectedPlaylistId !== null">
                       <Plus v-if="!contentQueue.includes(parseInt(c.id))" class="text-success" />
                       <Check v-else class="text-success" />
                     </button>
@@ -581,6 +582,7 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: var(--bs-border-radius-sm);
   background-color: var(--bs-light);
+  cursor: pointer;
 }
 
 .content-list-item.in-queue {
