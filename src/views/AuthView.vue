@@ -1,5 +1,5 @@
 <template>
-  <div class="card border border-primary my-auto p-4" style="max-width: 500px;">
+  <div class="card border border-primary my-auto p-4" style="max-width: 500px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
     <div class="d-flex flex-row justify-content-center">
       <img src="@/assets/img/hayden-blue.svg" width="90" alt="Hayden Logo" />&nbsp;&nbsp;
       <span class="fs-1 text-dark text-nowrap"><strong>HAYDEN</strong> <span class="text-primary">{{ $appname
@@ -16,15 +16,15 @@
     <div>
       <div class="mb-3 text-start gap-2">
         <label for="" class="form-label">Email or Employee #</label>
-        <input type="text" class="form-control form-control-sm" name="username" id="username"
+        <input type="text" class="form-control form-control-sm mb-2" name="username" id="username"
           v-model="credentials.username" />
         <label for="" class="form-label">Password</label>
         <input @keydown.enter="login" type="password" class="form-control form-control-sm" name="password" id="password"
           v-model="credentials.password" />
-        <a id="forgotpassword" class="form-text text-body-secondary" href="https://haydint.com/ttprod/v3/?forgot">Forgot
+        <a id="forgotpassword" class="form-text text-body-secondary" :href="`${this.$webroot}/ttprod/v3/?forgot`" target="_blank">Forgot
           your password?</a>
-        <button @click="login" type="button" class="btn btn-primary btn-sm d-block w-100 mt-3">Sign In</button>
-        <button v-if="loading" type="button" disabled
+        <button v-if="!loading" @click="login" type="button" class="btn btn-primary btn-sm d-block w-100 mt-3">Sign In</button>
+        <button v-else type="button" disabled
           class="d-flex align-items-center gap-2 justify-content-center btn btn-primary btn-sm d-block w-100 mt-3">
           Signing In <span class="spinner-border spinner-border-sm"></span>
         </button>

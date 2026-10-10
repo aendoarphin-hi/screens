@@ -13,8 +13,7 @@
           <!-- help description -->
           <p class="lh-sm">Submit (jpg, jpeg, png, pdf) files so they can be added to a playlist and assigned to
             screens.</p>
-          <p style="font-size: 8pt;" class="text-muted lh-sm fst-italic small">NOTE: If submitted by a user in
-            the 'Supervisors' group, HR will need to approve the files before it becomes available</p>
+          <p style="font-size: 8pt;" class="text-muted lh-sm fst-italic small">NOTE: Uploads submitted by <u>Supervisors</u> will require HR approval before the file becomes available</p>
           <transition enter-active-class="animate__animated animate__fadeIn animate__faster">
             <!-- error message -->
             <div v-if="error" class="mb-2 p-2 small rounded bg-danger-subtle text-danger-emphasis">
@@ -53,7 +52,7 @@
 </template>
 
 <script>
-import { clearModalFocus } from '@/common/helpers';
+import { clearModalFocus, inGroup } from '@/common/helpers';
 
 export default {
   components: {
@@ -76,6 +75,7 @@ export default {
     }
   },
   methods: {
+    inGroup,
     clearChanges() {
       this.files = [];
       this.error = null;
@@ -113,9 +113,8 @@ export default {
           formData.append('type', this.getContentType(file));
           formData.append('uploaded_by', parseInt(this.store.authenticated.number));
           
-          const needsApproval = Object.values(this.store.authenticated.groups).includes('HR Comms Supervisors');
           // default to inactive if uploaded by Supervisor, has to go through HR
-          formData.append('status', needsApproval ? 'inactive' : 'active');
+          formData.append('status', inGroup('HR Comms Supervisors') ? 'inactive' : 'active');
 
           try {
             await this.$axios.post(this.$api + '?content', formData);

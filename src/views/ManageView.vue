@@ -77,10 +77,7 @@
       <!-- tabs -->
       <ul class="nav nav-tabs" id="screens-tab-list">
         <li v-for="endpoint in endpoints" :key="endpoint" class="nav-item">
-          <button 
-            :id="`${endpoint}-tab`"
-            type="button"
-            class="nav-link text-capitalize" 
+          <button :id="`${endpoint}-tab`" type="button" class="nav-link text-capitalize"
             :class="{ 'active': activeTab === endpoint, 'visually-hidden': inGroup('HR Comms Supervisors') && endpoint === 'screens' }"
             @click="activeTab = endpoint; search = ''">
             {{ endpoint }}
@@ -100,7 +97,8 @@
           TAB VIEW - SCREENS
           ===================================================================================================================-->
 
-          <div v-if="!inGroup('HR Comms Supervisors')" class="tab-pane px-0 fade show" :class="activeTab === 'screens' ? 'show active' : ''" id="screens">
+          <div v-if="!inGroup('HR Comms Supervisors')" class="tab-pane px-0 fade show"
+            :class="activeTab === 'screens' ? 'show active' : ''" id="screens">
             <!-- filters, sort, view toggle row -->
             <div class="tab-pane__toolbar">
               <!-- Filters -->
@@ -164,8 +162,8 @@
               </button>
             </div>
             <!-- search bar 2 -->
-            <input type="search" class="mt-2 mt-xl-0 form-control form-control-sm mb-2 d-block d-xl-none" placeholder="Search"
-              v-model="search" />
+            <input type="search" class="mt-2 mt-xl-0 form-control form-control-sm mb-2 d-block d-xl-none"
+              placeholder="Search" v-model="search" />
             <!-- list view -->
             <div v-if="viewMode === 'list'" class="table-responsive">
               <table v-if="screens.length > 0" class="table table-hover align-middle mb-0">
@@ -186,7 +184,7 @@
                 <tbody>
                   <tr v-for="(s, i) in screens" :key="s.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
                     <td class="fw-semibold"
-                      style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap">
+                      style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap; margin-right: 1.6rem">
                       {{ s.title }}
                     </td>
                     <td>{{ s.location }}</td>
@@ -215,30 +213,34 @@
             </div>
 
             <!-- grid view -->
-            <div v-else-if="viewMode === 'grid'"
-              class="tab-pane__gridview"
-              style="max-height: 70dvh">
-              <div v-for="(s, i) in screens" :key="s.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
-                class="card border col-12 col-md-5 col-lg-3 col-xl-2">
+            <div v-else-if="viewMode === 'grid'" class="tab-pane__gridview" style="max-height: 70dvh">
+              <div v-for="s in screens" :key="s.id" class="card border col-12 col-md-5 col-lg-3 col-xl-2">
                 <div class="card-body d-flex flex-column gap-2">
+                  <SlideshowComponent :slides="s.slides" :interval="5000" :screenid="s.id" :key="s.id"
+                    :refresh-interval="30000" style="height: 100px;" />
                   <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                     <Television /> {{ s.title }}
                   </div>
-                  <span>
-                    <span class="badge text-capitalize" :class="statusBadgeClass(s.status)">{{ s.status }}</span>
-                  </span>
-                  <span v-if="s.playlist_id" class="text-muted">
-                    <PlaylistPlay /> {{ getPlaylistName(s.playlist_id) }}
-                  </span>
-                  <span v-if="s.location" class="text-muted">
-                    <MapMarker /> {{ s.location }}
-                  </span>
-                  <div class="d-flex flex-row gap-2" :class="{ 'opacity-0': hoverIndex !== i }">
+                  <div class="d-flex flex-wrap gap-2 text-nowrap small">
+                    <span>
+                      <span class="badge text-capitalize" :class="statusBadgeClass(s.status)">{{ s.status }}</span>
+                    </span>
+                    <span v-if="s.playlist_id" class="text-muted">
+                      <PlaylistPlay /> {{ getPlaylistName(s.playlist_id) }}
+                    </span>
+                    <span v-if="s.location" class="text-muted">
+                      <MapMarker /> {{ s.location }}
+                    </span>
+                  </div>
+                  <div class="d-flex flex-row gap-2">
                     <button style="font-size: 10px;" @click="openScreenPreview(s)"
                       class="w-50 text-nowrap cursor-pointer btn btn-sm btn-secondary">
                       Preview
-                    </button><button style="font-size: 10px;" @click="openEditScreenModal(s)"
-                      class="w-50 cursor-pointer mt-auto btn btn-sm btn-primary">Edit</button>
+                    </button>
+                    <button style="font-size: 10px;" @click="openEditScreenModal(s)"
+                      class="w-50 cursor-pointer mt-auto btn btn-sm btn-primary">
+                      Edit
+                    </button>
                   </div>
                 </div>
               </div>
@@ -294,8 +296,8 @@
               </button>
             </div>
             <!-- search bar 2 -->
-            <input type="search" class="mt-2 mt-xl-0 form-control form-control-sm mb-2 d-block d-xl-none" placeholder="Search"
-              v-model="search" />
+            <input type="search" class="mt-2 mt-xl-0 form-control form-control-sm mb-2 d-block d-xl-none"
+              placeholder="Search" v-model="search" />
             <!-- list view -->
             <div v-if="viewMode === 'list'" class="table-responsive">
               <table v-if="playlists.length > 0" class="table table-hover align-middle mb-0">
@@ -336,15 +338,8 @@
             </div>
 
             <!-- grid view -->
-            <div v-else-if="viewMode === 'grid'"
-              class="tab-pane__gridview"
-              style="max-height: 70dvh">
-              <div v-for="(p) in playlists" :key="p.id"
-                class="card border col-12 col-md-5 col-lg-3 col-xl-2">
-                <span class="approval-state">
-                  <ClockOutline class="text-warning-emphasis" title="Pending" />
-                  <CloseCircle class="text-danger" title="Rejected" />
-                </span> 
+            <div v-else-if="viewMode === 'grid'" class="tab-pane__gridview" style="max-height: 70dvh">
+              <div v-for="(p) in playlists" :key="p.id" class="card border col-12 col-md-5 col-lg-3 col-xl-2">
                 <div class="card-body d-flex flex-column gap-2">
                   <span class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                     <PlaylistPlay /> {{ p.name }}
@@ -364,7 +359,7 @@
               </div>
             </div>
           </div>
-          
+
           <!--===============================================================================================================
           TAB VIEW - CONTENT
           ===================================================================================================================-->
@@ -432,8 +427,8 @@
               </button>
             </div>
             <!-- search bar 2 -->
-            <input type="search" class="mt-2 mt-xl-0 form-control form-control-sm mb-2 d-block d-xl-none" placeholder="Search"
-              v-model="search" />
+            <input type="search" class="mt-2 mt-xl-0 form-control form-control-sm mb-2 d-block d-xl-none"
+              placeholder="Search" v-model="search" />
 
             <!-- list view -->
             <div v-if="viewMode === 'list'" class="table-responsive">
@@ -462,7 +457,7 @@
                     </td>
                     <td>
                       <span class="badge text-capitalize my-0" :class="contentStatusBadgeClass(c.status)">{{ c.status
-                      }}</span>
+                        }}</span>
                     </td>
                     <td>
                       <span class="text-muted text-capitalize">{{ new Date(c.created_at).toLocaleString() }}</span>
@@ -487,9 +482,7 @@
             </div>
 
             <!-- grid view -->
-            <div v-else-if="viewMode === 'grid'"
-              class="tab-pane__gridview"
-              style="max-height: 70dvh">
+            <div v-else-if="viewMode === 'grid'" class="tab-pane__gridview" style="max-height: 70dvh">
               <div v-for="(c, i) in content" :key="c.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
                 class="card border col-12 col-md-5 col-lg-3 col-xl-2">
                 <!-- image thumbnail -->
@@ -504,8 +497,10 @@
                   <span v-if="hoverIndex === i"
                     class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
                     style="background-color: rgba(0, 0, 0, 0.2);">
-                    <Pencil v-if="!inGroup('HR Comms Supervisors')" class="text-white cursor-pointer fs-3" @click="openEditContentModal(c)" />
-                    <InformationOutline v-else class="text-white cursor-pointer fs-3" @click="openEditContentModal(c)" />
+                    <Pencil v-if="!inGroup('HR Comms Supervisors')" class="text-white cursor-pointer fs-3"
+                      @click="openEditContentModal(c)" />
+                    <InformationOutline v-else class="text-white cursor-pointer fs-3"
+                      @click="openEditContentModal(c)" />
                   </span>
                 </span>
 
@@ -524,6 +519,9 @@
                 </span>
 
                 <div class="card-body d-flex flex-column gap-2">
+                  <span class="approval-state">
+                    <AlertCircle :hidden="c.status !== 'inactive'" style="color: #ecb81d" v-tooltip="'This item is pending approval'" />
+                  </span>
                   <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                     {{ c.title }}
                   </div>
@@ -579,16 +577,19 @@ import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue";
 import Cog from "vue-material-design-icons/Cog.vue";
 import Account from "vue-material-design-icons/Account.vue";
 import CloseCircle from "vue-material-design-icons/CloseCircle.vue";
-import ClockOutline from "vue-material-design-icons/ClockOutline.vue";
+import AlertCircle from "vue-material-design-icons/AlertCircle.vue";
 import InformationOutline from "vue-material-design-icons/InformationOutline.vue";
 
-import { filterByField, inGroup, searchByText, sortByField } from "@/common/helpers";
 import UploadContentModalComponent from "@/components/modals/UploadContentModalComponent.vue";
 import EditContentModalComponent from "@/components/modals/EditContentModalComponent.vue";
-import { nextTick } from "vue";
 import EditScreenModalComponent from "@/components/modals/EditScreenModalComponent.vue";
 import AddPlaylistModalComponent from "@/components/modals/AddPlaylistModalComponent.vue";
 import EditPlaylistModalComponent from "@/components/modals/EditPlaylistModalComponent.vue";
+import SlideshowComponent from "@/components/SlideshowComponent.vue";
+
+import { nextTick } from "vue";
+import { filterByField, inGroup, searchByText, sortByField } from "@/common/helpers";
+
 
 export default {
   name: "ManageView",
@@ -616,14 +617,15 @@ export default {
     Cog,
     Account,
     CloseCircle,
-    ClockOutline,
+    AlertCircle,
     InformationOutline,
 
     UploadContentModalComponent,
     EditScreenModalComponent,
     AddPlaylistModalComponent,
     EditPlaylistModalComponent,
-    EditContentModalComponent
+    EditContentModalComponent,
+    SlideshowComponent
   },
   inject: ["store"],
   data() {
@@ -913,10 +915,9 @@ export default {
 <style scoped>
 .approval-state {
   position: absolute;
-  top: 1rem;
+  top: 7.2rem;
   right: 1rem;
   font-size: clamp(0.9rem, 0.8vw, 1rem);
-  cursor: help;
 }
 
 .empty-state {
@@ -973,7 +974,8 @@ export default {
   margin: 3rem 0;
 }
 
-.table thead tr, .table tbody tr {
+.table thead tr,
+.table tbody tr {
   vertical-align: middle;
 }
 
@@ -1005,5 +1007,4 @@ export default {
 .table tbody tr td {
   padding: 0.25rem 0.5rem;
 }
-
 </style>

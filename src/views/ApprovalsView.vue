@@ -142,7 +142,7 @@
           <tbody>
             <tr v-for="c in filteredItems" :key="c.id">
               <td>
-                <div class="d-flex align-items-center gap-2 ps-2">
+                <div class="d-flex align-items-center gap-2">
                   <component :is="getTypeIcon(c.type)" class="text-muted" style="font-size: 2rem" />
                   <div class="lh-sm min-w-0">
                     <div class="fw-semibold text-truncate" style="max-width: 380px">{{ c.title }}</div>
