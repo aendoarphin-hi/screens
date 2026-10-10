@@ -17,7 +17,6 @@ import AccountCircle from "vue-material-design-icons/AccountCircle.vue";
 import Cog from "vue-material-design-icons/Cog.vue";
 
 const publicPages = ["Auth", "Unauthorized", "Slideshow"];
-const privatePages = ["Configuration", "Calendar", "Approvals"];
 
 const routes = [
   {
@@ -45,6 +44,9 @@ const routes = [
     component: () => import("@/views/CalendarView.vue"),
     active: true,
     icon: markRaw(CalendarMonth),
+    meta: {
+      groups: ["HR Comms HR", "HR Comms System"],
+    },
   },
   {
     path: "/approvals",
@@ -52,6 +54,9 @@ const routes = [
     component: () => import("@/views/ApprovalsView.vue"),
     active: true,
     icon: markRaw(AccountClock),
+    meta: {
+      groups: ["HR Comms HR", "HR Comms System"],
+    },
   },
   {
     path: "/profile",
@@ -66,6 +71,9 @@ const routes = [
     component: () => import("@/views/ConfigureView.vue"),
     active: false,
     icon: markRaw(Cog),
+    meta: {
+      groups: ["HR Comms System"],
+    },
   },
   {
     path: "/auth",
@@ -110,7 +118,12 @@ router.beforeEach(async (to) => {
     store.authenticated = authRes.data;
 
     // restrict configuration page if not in system group
-    if (privatePages.includes(to.name) && !inGroup("HR Comms System")) {
+    if (to.name === "Configuration" && !inGroup("HR Comms System")) {
+      return { name: "Unauthorized" };
+    }
+
+    // restrict Calendar and Approvals pages if in Supervisors group
+    if ((to.name === "Calendar" || to.name === "Approvals") && inGroup("HR Comms Supervisors")) {
       return { name: "Unauthorized" };
     }
   } catch (error) {
