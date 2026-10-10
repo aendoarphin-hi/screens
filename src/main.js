@@ -9,6 +9,8 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "vue-material-design-icons/styles.css";
 import "./assets/styles/main.scss";
 import "animate.css";
+import FloatingVue from "floating-vue";
+import "floating-vue/dist/style.css";
 
 // common components
 import LoadingComponent from "@/components/LoadingComponent.vue";
@@ -43,4 +45,5 @@ app
   .component("LoadingComponent", LoadingComponent)
   .component("HelpModalComponent", HelpModalComponent)
   .use(router)
+  .use(FloatingVue)
   .mount("#app");
