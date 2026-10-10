@@ -34,6 +34,13 @@ export default {
     refreshInterval: {
       type: Number,
       default: 10000
+    },
+    // screen id for embedded slideshows (e.g. the grid preview cards in the
+    // Screens tab of ManageView). when not provided, falls back to the
+    // ?screenid= route query used by the full-screen preview route.
+    screenid: {
+      type: [Number, String],
+      default: null
     }
   },
   data() {
@@ -55,9 +62,10 @@ export default {
     }
   },
   computed: {
-    // screenid passed via the preview route (/slideshow?screenid=12)
+    // screenid passed via the ?screenid= preview route (/slideshow?screenid=12)
+    // OR via the `screenid` prop for embedded slideshows (grid cards)
     activeScreenId() {
-      const raw = this.$route?.query?.screenid;
+      const raw = this.screenid ?? this.$route?.query?.screenid;
       return raw === undefined || raw === null || raw === "" ? null : Number(raw)
     },
     // Ordered, currently-visible image urls resolved from the screen's play sequence.
