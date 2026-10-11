@@ -24,12 +24,12 @@
       </li>
     </ul>
     <hr />
-    <div id="sidebar-footer" class="d-flex flex-nowrap">
-      <router-link to="/profile" class="text-decoration-none">
-        <small v-if="user" class="bg-primary fw-semibold p-1 rounded-circle text-white w-50">
+    <div id="sidebar-footer">
+      <RouterLink to="/profile">
+        <small v-if="user" class="profile-icon">
           {{ user.name.split(" ")[0][0] + user.name.split(" ")[1][0] }}
-        </small>&nbsp;&nbsp;<span class="text-nowrap">{{ user.name }}</span>
-      </router-link>
+        </small>&nbsp;&nbsp;{{ user.name }}
+      </RouterLink>
     </div>
   </aside>
   <div v-if="store.authenticated" @click="isOpen = !isOpen" class="cursor-pointer"
@@ -114,12 +114,14 @@ export default {
   opacity: 0;
 }
 
-#sidebar-footer {
+#sidebar-footer a {
+  width: 100%;
   display: flex;
   flex-direction: row;
-  gap: 0.5rem;
   align-items: center;
-  justify-content: space-between;
+  align-self: stretch;
+  text-decoration: none;
+  color: var(--bs-body-color);
 }
 
 .nav-link {
@@ -133,5 +135,16 @@ export default {
 .nav-link:not(.active):hover {
   background: #6f6f6f1e;
   transition: filter 0.05s ease-in;
+}
+
+.profile-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: var(--bs-primary);
+  color: var(--bs-white);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

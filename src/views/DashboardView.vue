@@ -401,7 +401,7 @@ export default {
           name: employee ? employee.name : "Unknown",
         };
       }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      if (inGroup("HR Comms Supervisors")) { // only show your own activity
+      if (inGroup("HR Comms Supervisors")) { // only show your own activity if supervisor
         result = activities.filter((a) => a.enum === this.store.authenticated.number).slice(0, 5);
       } else {
         result = activities.slice(0, 5);

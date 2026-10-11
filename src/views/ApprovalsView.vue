@@ -129,7 +129,7 @@
 
       <div class="table-responsive">
         <table v-if="filteredItems.length" class="table table-hover align-middle mb-0">
-          <thead class="table-light sticky-top shadow-sm text-nowrap">
+          <thead class="table-light border-bottom sticky-top text-nowrap">
             <tr class="text-uppercase">
               <th scope="col">Content</th>
               <th scope="col">Type</th>
@@ -203,9 +203,7 @@
       <div class="card-footer bg-white d-flex align-items-center gap-2 small text-muted border-top">
         <InformationOutline class="flex-shrink-0" />
         <span>
-          Static preview. Approved content becomes usable and appears in the content library (Screens &rarr; Content),
-          ready for a play sequence in the screen edit modal. Rejected items are returned to the submitter for
-          revision.
+          <!-- info -->
         </span>
       </div>
     </div>

@@ -65,8 +65,8 @@
         <button class="btn btn-sm btn-primary" @click="openUploadModal">
           <UploadBox /> Upload Content
         </button>
-        <RouterLink to="configuration">
-          <button v-if="inGroup('HR Comms System')" class="btn btn-sm btn-secondary">
+        <RouterLink v-if="inGroup('HR Comms System')" to="configuration">
+          <button class="btn btn-sm btn-secondary">
             <Cog /> Configure Screens
           </button>
         </RouterLink>
