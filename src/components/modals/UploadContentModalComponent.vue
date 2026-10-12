@@ -13,7 +13,8 @@
           <!-- help description -->
           <p class="lh-sm">Submit (jpg, jpeg, png, pdf) files so they can be added to a playlist and assigned to
             screens.</p>
-          <p style="font-size: 8pt;" class="text-muted lh-sm fst-italic small">NOTE: Uploads submitted by <u>Supervisors</u> will require HR approval before the file becomes available</p>
+          <p style="font-size: 8pt;" class="text-muted lh-sm fst-italic small">NOTE: Uploads submitted by
+            <u>Supervisors</u> will require HR approval before the file becomes available</p>
           <transition enter-active-class="animate__animated animate__fadeIn animate__faster">
             <!-- error message -->
             <div v-if="error" class="mb-2 p-2 small rounded bg-danger-subtle text-danger-emphasis">
@@ -29,8 +30,8 @@
             <small class="text-muted d-block">Select one or more .jpg, .jpeg, .png, or .pdf files to submit.</small>
           </div>
           <div class="d-flex flex-wrap mb-2 gap-1">
-            <span v-for="s in submittedFiles" :key="s"
-              class="badge rounded-pill bg-primary-subtle text-primary-emphasis me-1">{{ s }}</span>
+            <span v-for="s in submittedFiles" :key="s" @click="removeFile(s)" title="Remove file"
+              class="file-badge">{{ s }}</span>
           </div>
         </div>
         <div class="modal-footer p-2">
@@ -76,6 +77,14 @@ export default {
   },
   methods: {
     inGroup,
+    removeFile(s) {
+      this.files = this.files.filter(file => file.name !== s);
+      const dt = new DataTransfer();
+      this.files.forEach(file => dt.items.add(file));
+      if (this.$refs.fileInput) {
+        this.$refs.fileInput.files = dt.files;
+      }
+    },
     clearChanges() {
       this.files = [];
       this.error = null;
@@ -112,7 +121,7 @@ export default {
           formData.append('title', file.name);
           formData.append('type', this.getContentType(file));
           formData.append('uploaded_by', parseInt(this.store.authenticated.number));
-          
+
           // default to inactive if uploaded by Supervisor, has to go through HR
           formData.append('status', inGroup('HR Comms Supervisors') ? 'inactive' : 'active');
 
@@ -158,3 +167,27 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.file-badge {
+  display: inline-block;
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  color: rgba(var(--bs-secondary-rgb), 1);
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: var(--bs-border-radius-pill);
+  background-color: rgba(var(--bs-secondary-bg-rgb), 1);
+  border: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
+  margin-right: 0.25rem;
+}
+
+.file-badge:hover {
+  cursor: pointer;
+  background-color: rgba(var(--bs-danger-bg-rgb), 1);
+  border-color: rgba(var(--bs-danger-rgb), 1);
+}
+</style>

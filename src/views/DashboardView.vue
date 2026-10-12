@@ -4,10 +4,7 @@
     <HelpModalComponent>
       <h5><strong>HAYDEN</strong> {{ $appname }}</h5>
       <p>
-        In the dashboard, you can view a summary of recent changes to events and track the status of screens. Each
-        section also contains direct links to
-        a destination.
-        Use the toolbar on the top right to create new announcements, upload content, or issue an emergency alert.
+        Use the dashboard to view summary information about events, content uploads, and activity. Use the KPI cards to navigate to the relevant pages.
       </p>
     </HelpModalComponent>
 

@@ -3,9 +3,10 @@
     <!-- help modal -->
     <HelpModalComponent>
       <p>
-        The calendar is used to set a timer for an image. Link a timer to an image when creating a new event.<br/>
-        Once the event is created, it will be available in the timed content list in the edit screen window.<br/>
-        Below is a list of possible event types and subtypes.
+        The calendar is used to set a timer for a slide. An image or nonempty playlist can be assigned to an event.<br/>
+        Create a new event by sliding across your desired date range or use <button class="small btn btn-sm btn-success" style="font-size: 10px;">+ New Event</button>, it will be available in the timed content list in the edit screen window. Timed content will be marked with 
+        a <span class="badge text-bg-warning text-nowrap">Timed</span> badge.<br/>
+        Below is a list of possible event types and subtypes which is used to categorize events on the calendar.
       </p>
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
@@ -36,7 +37,7 @@
       <!-- toolbar -->
       <div class="route-view__toolbar">
         <div class="btn btn-sm btn-success" @click="openCreateEvent">
-          + Create Event
+          + New Event
         </div>
       </div>
     </div>

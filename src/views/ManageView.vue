@@ -4,13 +4,13 @@
     <HelpModalComponent>
       <h5>Navigation</h5>
       <p>Use the tabs to navigate between <strong>Screens, Playlists, Content</strong>.</p>
-      <h5>Screens</h5>
+      <h5>Screens <small class="text-muted fst-italic">HR Only</small></h5>
       <p>
         Each available screen can be edited with <span class="btn btn-sm btn-primary small mx-2"
           style="font-size: 10px;">Edit</span>
         and assigned a playlist containing a sequence of images (content) to be presented.
         Online or disabled devices can also be previewed (
-        <OpenInNew />)
+        <OpenInNew /> or <span class="btn btn-sm btn-outline-secondary small mx-1" style="font-size: 10px;">Preview</span>).
       </p>
       <h5>Screen Status</h5>
       <span :class="statusBadgeClass('online')" class="badge">Online</span><small> - Screen is fully operational and
@@ -21,19 +21,17 @@
         content will be shown and no actions can be applied.</small><br /><br />
       <h5>Playlists</h5>
       <p>
-        Playlists can be edited (
-        <Pencil />)
-        and assigned to a screen. Playlists contain a set of ordered images (content) to be presented.
-        Each playlist is created by a user with <span class="btn btn-sm btn-success small" style="font-size: 10px;">
+        Playlists contain slides that will be shown on screens.
+        Click <span class="btn btn-sm btn-success small" style="font-size: 10px;">
           <PlaylistPlay /> New Playlist
-        </span>
+        </span> to create a playlist. Assign content to the playlist with <span class="btn btn-sm btn-primary small"
+          style="font-size: 10px;">Edit</span>.
       </p>
       <h5>Content</h5>
       <p>
-        Content can be edited (
-        <Pencil />)
-        and added to a playlist. Content uploads will undergo approval before they can be added to a
-        playlist.
+        Users in the HR group can edit (
+        <Pencil />) the status of a file and determine whether it is available for use.
+        Content submitted by users not in the HR group will undergo approval before the file can be used.
         Upload new content with <span class="btn btn-sm btn-primary small" style="font-size: 10px;">
           <UploadBox /> Upload Content
         </span>
