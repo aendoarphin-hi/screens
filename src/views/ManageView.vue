@@ -216,8 +216,7 @@
             <div v-else-if="viewMode === 'grid'" class="tab-pane__gridview" style="max-height: 70dvh">
               <div v-for="s in screens" :key="s.id" class="card border col-12 col-md-5 col-lg-3 col-xl-2">
                 <div class="card-body d-flex flex-column gap-2">
-                  <SlideshowComponent :slides="s.slides" :interval="5000" :screenid="s.id" :key="s.id"
-                    :refresh-interval="30000" style="height: 100px;" />
+                  <SlideshowComponent :slides="s.slides" :interval="5000" :key="s.id" style="height: 100px;" />
                   <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                     <Television /> {{ s.title }}
                   </div>
@@ -682,10 +681,27 @@ export default {
       const locationNameById = Object.fromEntries(
         this.locations.map((l) => [l.id, l.name])
       );
-      let result = this.rawScreens.map((s) => ({
-        ...s,
-        location: locationNameById[s.location_id] ?? "",
-      }));
+      // content records keyed by id so we can resolve each screen's own play
+      // sequence (its comma-separated `content` ids) into image urls — index 0
+      // plays first. a screen with no assigned content ends up with slides: []
+      const contentById = Object.fromEntries(
+        this.rawContent.map((c) => [Number(c.id), c])
+      );
+      let result = this.rawScreens.map((s) => {
+        const ids = String(s.content || "")
+          .split(",").map((x) => x.trim()).map(Number)
+          .filter((n) => !Number.isNaN(n) && n > 0);
+        const slides = ids
+          .map((id) => contentById[id])
+          .filter((c) => c && (c.url || c.src))
+          .map((c) => c.url || c.src);
+        return {
+          ...s,
+          location: locationNameById[s.location_id] ?? "",
+          slides: slides.length > 0 ? slides : undefined, // undefined triggers default hayden logo
+        };
+      });
+
       result = filterByField(result, "location", this.filters.screens.location);
       result = filterByField(result, "status", this.filters.screens.status);
       if (this.search.trim().length > 0) {
