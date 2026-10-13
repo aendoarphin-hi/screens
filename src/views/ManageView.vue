@@ -13,11 +13,11 @@
         <OpenInNew /> or <span class="btn btn-sm btn-outline-secondary small mx-1" style="font-size: 10px;">Preview</span>).
       </p>
       <h5>Screen Status</h5>
-      <span :class="statusBadgeClass('online')" class="badge">Online</span><small> - Screen is fully operational and
+      <span :class="screenStatusBadgeClass('online')" class="badge">Online</span><small> - Screen is fully operational and
         all actions can be applied.</small><br />
-      <span :class="statusBadgeClass('offline')" class="badge">Offline</span><small> - Changes cannot be applied to
+      <span :class="screenStatusBadgeClass('offline')" class="badge">Offline</span><small> - Changes cannot be applied to
         screen because the device is currently down.</small><br />
-      <span :class="statusBadgeClass('disabled')" class="badge">Disabled</span><small> - Screen is unavailable. No
+      <span :class="screenStatusBadgeClass('disabled')" class="badge">Disabled</span><small> - Screen is unavailable. No
         content will be shown and no actions can be applied.</small><br /><br />
       <h5>Playlists</h5>
       <p>
@@ -187,7 +187,7 @@
                     </td>
                     <td>{{ s.location }}</td>
                     <td>
-                      <span class="badge text-capitalize" :class="statusBadgeClass(s.status)">{{ s.status }}</span>
+                      <span class="badge text-capitalize" :class="screenStatusBadgeClass(s.status)">{{ s.status }}</span>
                     </td>
                     <td>
                       <span>{{ getPlaylistName(s.playlist_id) }}</span>
@@ -220,7 +220,7 @@
                   </div>
                   <div class="d-flex flex-wrap gap-2 text-nowrap small">
                     <span>
-                      <span class="badge text-capitalize" :class="statusBadgeClass(s.status)">{{ s.status }}</span>
+                      <span class="badge text-capitalize" :class="screenStatusBadgeClass(s.status)">{{ s.status }}</span>
                     </span>
                     <span v-if="s.playlist_id" class="text-muted">
                       <PlaylistPlay /> {{ getPlaylistName(s.playlist_id) }}
@@ -519,14 +519,15 @@
                   <span class="approval-state">
                     <AlertCircle :hidden="c.status !== 'inactive'" style="color: #ecb81d" v-tooltip="'This item is pending approval'" />
                   </span>
-                  <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
+                  <div class="fw-semibold" style="margin-right: 1rem; overflow: hidden; text-overflow: ellipsis">
                     {{ c.title }}
                   </div>
 
-                  <small>
+                  <small class="text-muted hstack flex-wrap gap-1">
                     <span class="badge text-capitalize" :class="contentStatusBadgeClass(c.status)">
                       {{ c.status }}
                     </span>
+                    <span><Account /> {{ empName(c.uploaded_by) }}</span>
                   </small>
                 </div>
               </div>
@@ -724,6 +725,7 @@ export default {
       inGroup("HR Comms Supervisors") && (result = result.filter((c) => c.uploaded_by === this.store.authenticated.number));
       result = filterByField(result, "type", this.filters.content.type);
       result = filterByField(result, "status", this.filters.content.status);
+
       if (this.search.trim().length > 0) {
         result = searchByText(result, this.search);
       }
@@ -862,7 +864,7 @@ export default {
         this.loading = false;
       }
     },
-    statusBadgeClass(status) {
+    screenStatusBadgeClass(status) {
       const map = {
         online: "bg-success-subtle text-success-emphasis",
         offline: "bg-danger-subtle text-danger-emphasis",
@@ -931,13 +933,13 @@ export default {
   position: absolute;
   top: 7.2rem;
   right: 1rem;
-  font-size: clamp(0.9rem, 0.8vw, 1rem);
+  font-size: 11pt;
 }
 
 .empty-state {
   padding: 1rem;
   text-align: center;
-  font-size: clamp(0.8rem, 0.8vw, 1rem);
+  font-size: 11pt;
   opacity: 0.55;
   width: 100%;
 }
@@ -970,7 +972,7 @@ export default {
 }
 
 .tab-pane__gridview div.card {
-  font-size: clamp(0.8rem, 0.8vw, 1rem);
+  font-size: 11pt;
 }
 
 .table-responsive {

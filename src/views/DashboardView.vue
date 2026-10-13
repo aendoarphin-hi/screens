@@ -36,10 +36,8 @@
         class="col-12 col-md-6 col-lg-3 text-decoration-none">
         <div class="card kpi-card">
           <div class="card-body hstack align-items-start">
-            <div class="col cursor-pointer">
-              <div class="text-muted text-uppercase hstack text-fluid">
-                <component :is="s.icon" />&nbsp;&nbsp;{{ s.title }}
-              </div>
+            <div class="col cursor-pointer text-uppercase kpi-state">
+              <component :is="s.icon" />&nbsp;&nbsp;{{ s.title }}
               <h2 class="fw-semibold lh-1">{{
                 s.title === 'screens'
                   ? screens.length
@@ -52,7 +50,7 @@
                         : 0
               }}</h2>
             </div>
-            <div class="text-muted text-fluid gap-1 align-self-start d-flex flex-column my-auto cursor-pointer">
+            <div class="text-muted text-fluid gap-1 align-self-start d-flex flex-column my-1 cursor-pointer">
               <div v-for="d in subStats(s.title)" :key="'stat-' + d.label"
                 class="badge badge-pill align-items-center justify-content-end rounded d-flex text-uppercase fw-semibold"
                 :class="`text-${d.color} bg-${d.bgColor} ${d.value === 0 ? 'd-none' : ''}`"><span class="me-auto">{{
@@ -126,9 +124,9 @@
                     <div class="upload-icon rounded-3 flex-shrink-0 d-flex align-items-center justify-content-center">
                       📄
                     </div>
-                    <div class="overflow-hidden">
+                    <div class="overflow-hidden small">
                       <div class="fw-semibold text-uppercase text-nowrap text-truncate">{{ u.title }}</div>
-                      <div class="text-muted small">{{ u.filename }} &middot; {{ new Date(u.created_at).toDateString()
+                      <div class="text-muted small">Uploaded by {{ authorName(u.uploaded_by)|| 'Unknown' }} &middot; {{ new Date(u.created_at).toDateString()
                       }}</div>
                     </div>
                   </div>
@@ -170,7 +168,7 @@
               <div class="d-flex flex-column text-capitalize">
                 <div class="fw-semibold text-uppercase">{{ e.title }}</div>
                 <div class="text-muted text-nowrap me-1 small">
-                  {{ new Date(e.start).toDateString() }}
+                  {{ authorName(e.employee_num) }} &middot; {{ new Date(e.start).toDateString() }}
                 </div>
               </div>
             </li>
@@ -382,7 +380,10 @@ export default {
       // if user is supervisor and clicked on screens or approvals, redirect to current route otherwise redirect to clicked kpi
       return inGroup("HR Comms Supervisors") && (title === 'screens' || title === 'approvals') ? { name: 'Dashboard' } : { name: 'Manage', query: { tab: title } }
       // return title === 'approvals' ? 'approvals' : { name: 'Manage', query: { tab: title } }
-    }
+    },
+    authorName(empnum) {
+      return this.employees.find((e) => e.number === empnum).name
+    },
   },
   computed: {
     recentUploads() {
@@ -418,7 +419,6 @@ export default {
   },
   async mounted() {
     try {
-      console.log(this.store.authenticated.number);
       this.loading = true;
 
       const states = [
@@ -501,12 +501,13 @@ export default {
   overflow-y: auto;
 }
 
-.list-group-item:nth-child(even) {
-  background: var(--bs-light);
+.list-group-item {
+  background: white;
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
 }
 
-.list-group-item:nth-child(odd) {
-  background: white;
+.list-group-item:last-of-type {
+  border-bottom: none;
 }
 
 /* kpi card */

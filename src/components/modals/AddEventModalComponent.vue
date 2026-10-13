@@ -376,7 +376,7 @@ export default {
           this.newEvent.content = this.contentQueue.length > 0 ? this.contentQueue.join(",") : null;
         }
 
-        if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
+        // if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
 
         // post
         await this.$axios.post(this.$api + "?events&new", this.newEvent);
@@ -395,7 +395,6 @@ export default {
         // update the null entity_id value in the new activity log
         const latestEvent = (await this.$axios.get(this.$api + "?events")).data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].id;
         const latestActivity = (await this.$axios.get(this.$api + "?activity")).data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].id;
-        window.alert(latestActivity);
         await this.$axios.post(this.$api + "?activity&update", {
           column: "entity_id",
           value: latestEvent,
