@@ -101,7 +101,7 @@
 
           <!-- choose a playlist: replaces this event's content with that
                playlist's content (events only store content ids) -->
-          <div class="mt-2 d-flex flex-column gap-1">
+          <div v-if="editing" class="mt-2 d-flex flex-column gap-1">
             <label class="small fw-semibold">
               Playlist
               <span class="text-muted fw-normal">(choose one to replace the content)</span>
@@ -128,7 +128,7 @@
 
           <!-- existing content selection: an event can hold one or more content
                items, stored as a comma-separated list in event.content -->
-          <div class="mt-2 d-flex flex-column gap-1">
+          <div v-if="editing" class="mt-2 d-flex flex-column gap-1">
             <label class="small fw-semibold">
               Content
               <span class="text-muted fw-normal">({{ contentQueue.length }})</span>

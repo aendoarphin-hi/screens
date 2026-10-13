@@ -19,11 +19,11 @@
       </div>
       <!-- toolbar -->
       <div class="route-view__toolbar">
-        <button v-if="!inGroup('HR Comms Supervisors')" class="btn btn-sm btn-success" @click="openCreateModal">+ Create Announcement</button>
+        <button v-if="!inGroup('Screens Supervisors')" class="btn btn-sm btn-success" @click="openCreateModal">+ Create Announcement</button>
         <button class="btn btn-sm btn-primary" @click="openUploadModal">
           <UploadBox /> Upload Content
         </button>
-        <button v-if="!inGroup('HR Comms Supervisors')" class="btn btn-sm btn-danger" @click="open">
+        <button v-if="!inGroup('Screens Supervisors')" class="btn btn-sm btn-danger" @click="open">
           <ExclamationThick /> Issue Emergency Alert
         </button> <!-- not same as events; do something that is immediate -->
       </div>
@@ -76,7 +76,7 @@
               </span>
               Upcoming Announcements
             </h6>
-            <router-link :hidden="inGroup('HR Comms Supervisors')" :to="{ name: 'Calendar', query: { type: 'announcement' } }"
+            <router-link :hidden="inGroup('Screens Supervisors')" :to="{ name: 'Calendar', query: { type: 'announcement' } }"
               class="small link-primary text-decoration-none">More&nbsp;▸</router-link>
           </div>
           <ul v-if="upcomingAnnouncements.length" class="list-group list-group-flush">
@@ -153,7 +153,7 @@
               </span>
               People
             </h6>
-            <router-link :hidden="inGroup('HR Comms Supervisors')" to="/calendar" class="small link-primary text-decoration-none">More
+            <router-link :hidden="inGroup('Screens Supervisors')" to="/calendar" class="small link-primary text-decoration-none">More
               &nbsp;▸</router-link>
           </div>
           <ul v-if="employeeEvents.length" class="list-group list-group-flush"
@@ -185,7 +185,7 @@
               <span class="mb-1">
                 <ClockOutline class="fs-5" />
               </span>
-              {{ inGroup("HR Comms Supervisors") ? "My" : "Recent" }} Activity
+              {{ inGroup("Screens Supervisors") ? "My" : "Recent" }} Activity
             </h6>
           </div>
           <div class="timeline">
@@ -378,8 +378,12 @@ export default {
     },
     getRoute(title) {
       // if user is supervisor and clicked on screens or approvals, redirect to current route otherwise redirect to clicked kpi
-      return inGroup("HR Comms Supervisors") && (title === 'screens' || title === 'approvals') ? { name: 'Dashboard' } : { name: 'Manage', query: { tab: title } }
-      // return title === 'approvals' ? 'approvals' : { name: 'Manage', query: { tab: title } }
+      if (inGroup("Screens Supervisors") && (title === 'screens' || title === 'approvals')) {
+        return { name: 'Dashboard' };
+      } else {
+        if (title === 'approvals') return title;
+        return { name: 'Manage', query: { tab: title } };
+      }
     },
     authorName(empnum) {
       return this.employees.find((e) => e.number === empnum).name
@@ -399,7 +403,7 @@ export default {
           name: employee ? employee.name : "Unknown",
         };
       }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      if (inGroup("HR Comms Supervisors")) { // only show your own activity if supervisor
+      if (inGroup("Screens Supervisors")) { // only show your own activity if supervisor
         result = activities.filter((a) => a.enum === this.store.authenticated.number).slice(0, 5);
       } else {
         result = activities.slice(0, 5);

@@ -204,6 +204,7 @@
         <InformationOutline class="flex-shrink-0" />
         <span>
           <!-- info -->
+           This is a mockup page and is currently in development.
         </span>
       </div>
     </div>

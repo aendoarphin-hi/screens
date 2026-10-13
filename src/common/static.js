@@ -106,9 +106,9 @@ export const user = {
     "CAPEX Users",
     "CAPA Users",
     "EHS Inspections",
-    "HR Comms HR",
-    "HR Comms Supervisors",
-    "HR Comms System",
+    "Screens HR",
+    "Screens Supervisors",
+    "Screens System",
     "CAPEX Buyers"
   ]
 }

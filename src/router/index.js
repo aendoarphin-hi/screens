@@ -45,7 +45,7 @@ const routes = [
     active: true,
     icon: markRaw(CalendarMonth),
     meta: {
-      groups: ["HR Comms HR", "HR Comms System"],
+      groups: ["Screens HR", "Screens System"],
     },
   },
   {
@@ -55,7 +55,7 @@ const routes = [
     active: true,
     icon: markRaw(AccountClock),
     meta: {
-      groups: ["HR Comms HR", "HR Comms System"],
+      groups: ["Screens HR", "Screens System"],
     },
   },
   {
@@ -72,7 +72,7 @@ const routes = [
     active: false,
     icon: markRaw(Cog),
     meta: {
-      groups: ["HR Comms System"],
+      groups: ["Screens System"],
     },
   },
   {
@@ -114,16 +114,16 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   try {
     // check logged in status and update store
-    const authRes = await axios.get(config.api + "?auth");
+    const authRes = await axios.get(config.api + "?auth"); // continue here: block all not in a screens group
     store.authenticated = authRes.data;
 
     // restrict configuration page if not in system group
-    if (to.name === "Configuration" && !inGroup("HR Comms System")) {
+    if (to.name === "Configuration" && !inGroup("Screens System")) {
       return { name: "Unauthorized" };
     }
 
     // restrict Calendar and Approvals pages if in Supervisors group
-    if ((to.name === "Calendar" || to.name === "Approvals") && inGroup("HR Comms Supervisors")) {
+    if ((to.name === "Calendar" || to.name === "Approvals") && inGroup("Screens Supervisors")) {
       return { name: "Unauthorized" };
     }
   } catch (error) {

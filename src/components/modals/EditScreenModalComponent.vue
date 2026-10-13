@@ -227,7 +227,7 @@ export default {
     },
     async deleteScreen() {
       try {
-        if (!window.confirm('Are you sure you want to delete this screen?')) return;
+        if (!window.confirm('This screen will need to be reconfigured by a System user. Confirm delete?')) return;
         await this.$axios.post(this.$api + '?screens&delete', {
           id: parseInt(this.form.id)
         });

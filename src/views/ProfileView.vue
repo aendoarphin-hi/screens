@@ -36,7 +36,7 @@
         <div class="col-6">
           <small class="text-muted">Group</small>
           <div v-for="group in userdata.groups" :key="group" class="fw-semibold"><template
-              v-if="group.includes('HR Comms')">{{ group.split('HR Comms')[1] }}</template>
+              v-if="group.includes('Screens')">{{ group.split('Screens')[1] }}</template>
           </div>
         </div>
       </div>

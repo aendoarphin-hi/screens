@@ -46,6 +46,7 @@ export default {
     };
   },
   async mounted() {
+    console.log(this.$webroot);
     this.loading = true
     try {
       // do stuff

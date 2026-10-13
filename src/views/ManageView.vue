@@ -38,10 +38,24 @@
       </p>
       <h5>Group Permissions</h5>
       <small>
-        <strong>System</strong> - All actions allowed, with additional backend configuration options for screens
+        <strong>System</strong> - All actions allowed, with additional backend configuration options for adding new screens
         <br />
-        <strong>HR</strong> - Manage events, screens, playlists, content, and approvals<br />
-        <strong>Supervisors</strong> - Upload content and create new playlists
+        <strong>HR</strong> - Full access to screen, plalist, content, and screen management<br />
+        <strong>Supervisors</strong>
+        <ul>
+          <li>Have <strong>zero access</strong> to the screen editor.</li>
+          <li>Can upload files and create their own playlists.</li>
+          <li>Uploaded files remain inactive until approved.</li>
+          <li>Can only view their own playlists and uploaded files.</li>
+          <li>
+            Files pending approval are marked as
+            <span class="badge bg-danger-subtle text-danger-emphasis">Inactive</span>
+            and display an alert circle (
+            <AlertCircle style="color: #ecb81d" v-tooltip="'This item is pending approval'" />
+            ).
+          </li>
+        </ul>
+          
       </small>
     </HelpModalComponent>
 
@@ -63,7 +77,7 @@
         <button class="btn btn-sm btn-primary" @click="openUploadModal">
           <UploadBox /> Upload Content
         </button>
-        <RouterLink v-if="inGroup('HR Comms System')" to="configuration">
+        <RouterLink v-if="inGroup('Screens System')" to="configuration">
           <button class="btn btn-sm btn-secondary">
             <Cog /> Configure Screens
           </button>
@@ -76,7 +90,7 @@
       <ul class="nav nav-tabs" id="screens-tab-list">
         <li v-for="endpoint in endpoints" :key="endpoint" class="nav-item">
           <button :id="`${endpoint}-tab`" type="button" class="nav-link text-capitalize"
-            :class="{ 'active': activeTab === endpoint, 'visually-hidden': inGroup('HR Comms Supervisors') && endpoint === 'screens' }"
+            :class="{ 'active': activeTab === endpoint, 'visually-hidden': inGroup('Screens Supervisors') && endpoint === 'screens' }"
             @click="activeTab = endpoint; search = ''">
             {{ endpoint }}
           </button>
@@ -95,7 +109,7 @@
           TAB VIEW - SCREENS
           ===================================================================================================================-->
 
-          <div v-if="!inGroup('HR Comms Supervisors')" class="tab-pane px-0 fade show"
+          <div v-if="!inGroup('Screens Supervisors')" class="tab-pane px-0 fade show"
             :class="activeTab === 'screens' ? 'show active' : ''" id="screens">
             <!-- filters, sort, view toggle row -->
             <div class="tab-pane__toolbar">
@@ -180,7 +194,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(s, i) in screens" :key="s.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
+                  <tr v-for="s in screens" :key="s.id">
                     <td class="fw-semibold"
                       style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap; margin-right: 1.6rem">
                       {{ s.title }}
@@ -193,7 +207,7 @@
                       <span>{{ getPlaylistName(s.playlist_id) }}</span>
                     </td>
                     <td class="text-end">
-                      <div class="d-flex gap-2 justify-content-end" :class="{ invisible: hoverIndex !== i }">
+                      <div class="d-flex gap-2 justify-content-end">
                         <button class="btn btn-sm btn-outline-secondary cursor-pointer" @click="openScreenPreview(s)">
                           <OpenInNew /> Preview
                         </button>
@@ -494,7 +508,7 @@
                   <span v-if="hoverIndex === i"
                     class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
                     style="background-color: rgba(0, 0, 0, 0.2);">
-                    <Pencil v-if="!inGroup('HR Comms Supervisors')" class="text-white cursor-pointer fs-3"
+                    <Pencil v-if="!inGroup('Screens Supervisors')" class="text-white cursor-pointer fs-3"
                       @click="openEditContentModal(c)" />
                     <InformationOutline v-else class="text-white cursor-pointer fs-3"
                       @click="openEditContentModal(c)" />
@@ -664,7 +678,7 @@ export default {
       },
       hoverIndex: -1, // for hover effect on tab actions
       viewMode: "grid", // grid or list
-      activeTab: inGroup("HR Comms Supervisors") ? "playlists" : "screens", // active tab
+      activeTab: inGroup("Screens Supervisors") ? "playlists" : "screens", // active tab
       screenToEdit: null, // obj to pass to modal for editing
       playlistToEdit: null, // obj to pass to modal for editing
       contentToEdit: null, // obj to pass to modal for editing
@@ -712,7 +726,7 @@ export default {
     playlists() {
       let result = [...this.rawPlaylists];
       // include only user's own playlists if user has limited privileges
-      inGroup("HR Comms Supervisors") && (result = result.filter((p) => p.created_by === this.store.authenticated.number));
+      inGroup("Screens Supervisors") && (result = result.filter((p) => p.created_by === this.store.authenticated.number));
       if (this.search.trim().length > 0) {
         result = searchByText(result, this.search);
       }
@@ -722,7 +736,7 @@ export default {
     content() {
       let result = [...this.rawContent];
       // include only user's own content if user has limited privileges
-      inGroup("HR Comms Supervisors") && (result = result.filter((c) => c.uploaded_by === this.store.authenticated.number));
+      inGroup("Screens Supervisors") && (result = result.filter((c) => c.uploaded_by === this.store.authenticated.number));
       result = filterByField(result, "type", this.filters.content.type);
       result = filterByField(result, "status", this.filters.content.status);
 

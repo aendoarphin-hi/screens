@@ -123,7 +123,7 @@ export default {
           formData.append('uploaded_by', parseInt(this.store.authenticated.number));
 
           // default to inactive if uploaded by Supervisor, has to go through HR
-          formData.append('status', inGroup('HR Comms Supervisors') ? 'inactive' : 'active');
+          formData.append('status', inGroup('Screens Supervisors') ? 'inactive' : 'active');
 
           try {
             await this.$axios.post(this.$api + '?content', formData);

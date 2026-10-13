@@ -4,7 +4,7 @@
     <HelpModalComponent>
       <p>
         The calendar is used to set a timer for a slide. An image or nonempty playlist can be assigned to an event.<br/>
-        Create a new event by sliding across your desired date range or use <button class="small btn btn-sm btn-success" style="font-size: 10px;">+ New Event</button>, it will be available in the timed content list in the edit screen window. Timed content will be marked with 
+        Create a new event by click-dragging the cursor over multiple dates, or click <button class="small btn btn-sm btn-success" style="font-size: 10px;">+ New Event</button>, it will be available in the timed content list in the edit screen window. Timed content will be marked with 
         a <span class="badge text-bg-warning text-nowrap">Timed</span> badge.<br/>
         Below is a list of possible event types and subtypes which is used to categorize events on the calendar.
       </p>
@@ -213,7 +213,7 @@ export default {
           nextTick(() => {
             this.$modal.show('edit-event-modal')
           })
-          console.log('Raw event: ' + JSON.stringify(this.selectedEvent, null, 2))
+          // console.log('Raw event: ' + JSON.stringify(this.selectedEvent, null, 2))
         }
       },
     }

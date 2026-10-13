@@ -7,7 +7,7 @@
     <span class="w-100 text-center text-muted" style="font-size: 10px;">v{{ $version }}</span>
     <hr />
     <ul class="nav nav-pills d-flex flex-column mb-auto gap-1">
-      <li v-for="route in routes" :hidden="inGroup('HR Comms Supervisors') && ['Calendar', 'Approvals'].includes(route.name)" :key="route.name" class="nav-item">
+      <li v-for="route in routes" :hidden="inGroup('Screens Supervisors') && ['Calendar', 'Approvals'].includes(route.name)" :key="route.name" class="nav-item">
         <router-link :to="{ name: route.name }" class="nav-link"
           active-class="active">
           <span>
@@ -16,7 +16,7 @@
         </router-link>
       </li>
       <li class="nav-item">
-        <a :href="$webroot" class="nav-link">
+        <a :href="this.$webroot" class="nav-link">
           <span>
             <Logout />
           </span>&nbsp;&nbsp;<span>Exit</span>
